@@ -1,0 +1,324 @@
+<?xml version="1.0"?>
+
+<project default="usage" basedir=".">
+
+    <property file="build.properties"/>
+
+    <!-- Override compiler to be javac -->
+    <property name="build.compiler" value="modern" />
+
+    <property name="build.dir" value="build/classes"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="license.dir" value="licenses"/>
+    <property name="build.lib.dir" value="build/lib"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="test.dir" value="test"/>
+    <property name="src.dir" value="src"/>
+    <property name="demo.dir" value="demo"/>
+    <property name="report.dir" value="reports"/>
+    <property name="javadoc.dir" value="docs"/>
+    <property name="version" value="${version_major}.${version_minor}.${version_last}"/>
+    <property name="dnsjnio.dist.folder" value="dnsjnio-${version}"/>
+
+
+    <!-- set the classpath -->
+    <path id="dnsjnio.classpath">
+        <pathelement location="${build.dir}" />
+        <fileset dir="${lib.dir}" includes="*.jar,*.zip" />
+    </path>
+    <property name="dnsjnio.classpath" refid="dnsjnio.classpath" />
+
+    <!-- Nominet targets -->
+    <target name="compile" depends="make.dirs, compile.src, compile.demo"/>
+    <target name="compile.src">
+        <javac srcdir="${src.dir}/"
+               destdir="${build.dir}"
+               deprecation="true"
+               classpathref="dnsjnio.classpath"
+               includes="uk/nominet/ org/xbill/DNS/" />
+    </target>
+    <target name="compile.demo">
+        <javac srcdir="${demo.dir}/"
+               destdir="${build.dir}"
+               deprecation="true"
+               classpathref="dnsjnio.classpath"/>
+    </target>
+
+    <target name="make.dirs">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${report.dir}"/>
+    </target>
+
+    <target name="compile.test" depends = "jar">
+        <javac srcdir="${test.dir}/"
+               destdir="${build.dir}"
+               deprecation="true"
+               classpathref="dnsjnio.classpath"
+               includes="uk/nominet/" />
+    </target>
+
+    <target name="jar" depends="clean, fix.versions, compile">
+        <copy file="${test.dir}/log4j.properties"
+              tofile="${build.dir}/log4j.properties" overwrite="true"/>
+        <jar jarfile="${build.lib.dir}/dnsjnio.jar"
+             basedir="${build.dir}"
+             includes="**/*"
+             excludes="**/${report.dir}/*"/>
+    </target>
+
+    <target name="javadoc">
+        <javadoc author="true" breakiterator="true" classpathref="dnsjnio.classpath"
+                 destdir="${javadoc.dir}" doctitle="dnsjnio" failonerror="false"
+                 packagenames="uk.nominet.*">
+            <fileset dir="${src.dir}"/>
+        </javadoc>
+    </target>
+
+    <target name="demo" depends="compile">
+        <java classname="DemoClient"
+              classpathref="dnsjnio.classpath"/>
+    </target>
+
+    <target name="test" depends="run.test, make.junit.report"/>
+    <target name="ret.test" depends="run.ret.test, make.junit.report"/>
+    <target name="listener.test" depends="run.listener.test, make.junit.report"/>
+
+    <target name="run.test" depends="compile.test">
+        <echo message="****  RUNNING TESTS  ****" />
+        <echo message="****  SOME MAY TAKE SEVERAL MINUTES EACH  ****" />
+        <junit printsummary="yes" fork="yes"
+               errorproperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="true">
+            <jvmarg value="-XX:+AggressiveHeap"/>
+            <classpath>
+                <pathelement location="${build.dir}" />
+                <fileset dir="${lib.dir}" includes="*.jar,*.zip" />
+            </classpath>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+
+            <batchtest todir="${report.dir}">
+                <fileset dir="${build.dir}">
+                    <include name="uk/nominet/**/*Test.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="run.ret.test" depends="compile.test">
+        <junit printsummary="yes" fork="yes"
+               errorproperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="false">
+            <jvmarg value="-XX:+AggressiveHeap"/>
+            <classpath>
+                <pathelement location="${build.dir}" />
+                <fileset dir="${lib.dir}" includes="*.jar,*.zip" />
+            </classpath>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+
+            <batchtest todir="${report.dir}">
+                <fileset dir="${build.dir}">
+                    <include name="uk/nominet/**/RetTest.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="run.listener.test" depends="compile.test">
+        <junit printsummary="yes" fork="yes"
+               errorproperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="false">
+            <jvmarg value="-XX:+AggressiveHeap"/>
+            <classpath>
+                <pathelement location="${build.dir}" />
+                <fileset dir="${lib.dir}" includes="*.jar,*.zip" />
+            </classpath>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+
+            <batchtest todir="${report.dir}">
+                <fileset dir="${build.dir}">
+                    <include name="uk/nominet/**/ListenerTest.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="make.junit.report">
+        <delete dir="${report.dir}/junitreport" quiet="true" failonerror="false"/>
+        <mkdir dir="${report.dir}/junitreport"/>
+
+        <junitreport todir="${report.dir}/junitreport">
+            <fileset dir="${report.dir}">
+                <include name="TEST-*.*"/>
+            </fileset>
+            <report todir="${report.dir}/junitreport"/>
+        </junitreport>
+    </target>
+
+    <target name="clean">
+        <delete quiet = "true">
+            <fileset dir="${dist.dir}">
+                <include name="*.tar.gz" />
+                <include name="*.zip" />
+            </fileset>
+        </delete>
+        <delete quiet = "true">
+            <fileset dir="${lib.dir}">
+                <include name="dnsjnio.jar" />
+            </fileset>
+        </delete>
+        <delete quiet = "true">
+            <fileset dir="${build.lib.dir}">
+                <include name="*.jar" />
+            </fileset>
+        </delete>
+        <delete quiet="true">
+            <fileset dir="${build.dir}">
+                <include name="**/*" />
+            </fileset>
+        </delete>
+        <delete quiet="true">
+            <fileset dir="${report.dir}">
+                <include name="**/*.*" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="build.dist" depends="jar, javadoc">
+        <!-- Now copy the distributables in to the lib foler -->
+        <copy file="${build.lib.dir}/dnsjnio.jar" tofile="${lib.dir}/dnsjnio.jar"/>
+    </target>
+
+    <target name="fix.versions">
+        <!-- Sort out the version numbers for the code, docs and distribution -->
+        <copy file="src/README.src"
+              tofile="README" overwrite="true">
+            <filterset>
+                <filter token="VERSION_STRING" value="${version}"/>
+            </filterset>
+        </copy>
+        <copy file="src/uk/nominet/dnsjnio/Version.java.ant"
+              tofile="src/uk/nominet/dnsjnio/Version.java" overwrite="true">
+            <filterset>
+                <filter token="VERSION_STRING" value="${version}"/>
+            </filterset>
+        </copy>
+        <copy file="test/uk/nominet/dnsjnio/RemoteServerTest.java.txt"
+              tofile="test/uk/nominet/dnsjnio/RemoteServerTest.java" overwrite="true">
+            <filterset>
+                <filter token="VERSION_STRING" value="${version_major}-${version_minor}-${version_last}"/>
+            </filterset>
+        </copy>
+    </target>
+
+    <target name="dist" depends="build.dist, dist.zip, dist.tar">
+        <!-- We want to make a windows .zip, with CRLF on text files,
+        and a .tar file with CRLF removed -->
+    </target>
+
+    <target name="dist.zip" depends="windows.CRLF">
+        <!-- Make a zip release -->
+        <zip destfile="${dist.dir}/dnsjnio-${version}.zip">
+            <zipfileset dir="." includes="src/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="demo/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="test/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="${license.dir}/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="build.xml" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="build.properties" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="README" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="lib/commons-logging.jar" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="lib/log4j-1.2.8.jar" prefix="${dnsjnio.dist.folder}"/>
+<!--            <zipfileset dir="." includes="lib/dnsjava-*.jar" prefix="${dnsjnio.dist.folder}"/> -->
+            <zipfileset dir="." includes="lib/dnsjnio.jar" prefix="${dnsjnio.dist.folder}"/>
+            <zipfileset dir="." includes="lib/spring.jar" prefix="${dnsjnio.dist.folder}"/>
+        </zip>
+    </target>
+
+    <target name="dist.tar" depends="unix.CRLF">
+        <!-- Make a tar release -->
+        <tar destfile="${dist.dir}/dnsjnio-${version}.tar">
+            <tarfileset dir="." includes="src/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <tarfileset dir="." includes="demo/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <tarfileset dir="." includes="test/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <tarfileset dir="." includes="${license.dir}/**/*" prefix="${dnsjnio.dist.folder}"/>
+            <tarfileset dir="." includes="build.xml" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+            <tarfileset dir="." includes="build.properties" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+            <tarfileset dir="." includes="README" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+            <tarfileset dir="." includes="lib/commons-logging.jar" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+            <tarfileset dir="." includes="lib/log4j-1.2.8.jar" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+<!--            <tarfileset dir="." includes="lib/dnsjava-*.jar" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/> -->
+            <tarfileset dir="." includes="lib/dnsjnio.jar" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+            <tarfileset dir="." includes="lib/spring.jar" prefix="${dnsjnio.dist.folder}" preserveLeadingSlashes="true"/>
+        </tar>
+        <gzip zipfile="${dist.dir}/dnsjnio-${version}.tar.gz" src="${dist.dir}/dnsjnio-${version}.tar"/>
+    </target>
+
+    <target name="unix.CRLF">
+        <fixcrlf srcdir="${basedir}"
+                 eol="lf"
+                 eof="remove"
+                 includes="*"/>
+        <fixcrlf srcdir="${license.dir}"
+                 eol="lf"
+                 eof="remove"
+                 includes="*"/>
+        <fixcrlf srcdir="${src.dir}"
+                 eol="lf"
+                 eof="remove"
+                 includes="**/*"/>
+        <fixcrlf srcdir="${demo.dir}"
+                 eol="lf"
+                 eof="remove"
+                 includes="**/*"/>
+        <fixcrlf srcdir="${test.dir}"
+                 eol="lf"
+                 eof="remove"
+                 includes="**/*"/>
+    </target>
+
+    <target name="windows.CRLF">
+        <fixcrlf srcdir="${basedir}"
+                 eol="crlf"
+                 eof="asis"
+                 includes="*"/>
+        <fixcrlf srcdir="${license.dir}"
+                 eol="crlf"
+                 eof="asis"
+                 includes="*"/>
+        <fixcrlf srcdir="${src.dir}"
+                 eol="crlf"
+                 eof="asis"
+                 includes="**/*"/>
+        <fixcrlf srcdir="${demo.dir}"
+                 eol="crlf"
+                 eof="asis"
+                 includes="**/*"/>
+        <fixcrlf srcdir="${test.dir}"
+                 eol="crlf"
+                 eof="asis"
+                 includes="**/*"/>
+    </target>
+
+    <!-- USAGE target -->
+    <target name="usage">
+        <echo message=" " />
+        <echo message="dnsjnio ${version} Build System" />
+        <echo message="-------------------" />
+        <echo message="Available Targets:" />
+        <echo message="  jar               - create jar from class files" />
+        <echo message="  clean             - delete class files" />
+        <echo message="  dist              - package it up" />
+        <echo message="  test              - run the tests" />
+        <echo message="  demo              - run the demo" />
+        <echo message="  usage             - this help message" />
+        <echo message=" " />
+    </target>
+
+</project>
+

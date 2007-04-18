@@ -1,0 +1,71 @@
+dnsjnio version @VERSION_STRING@
+=====================
+
+Introduction
+------------
+
+dnsjnio is an extension module for dnsjava that uses the NIO library
+(java.nio) to handle the I/O.  The NonblockingResolver class is used
+instead of SimpleResolver.
+
+Each instance of NonblockingResolver will, where possible, route all
+queries over a single port.  If a query is sent which has the same
+header ID as a query currently in use on the single port, then a new
+port will be used for that query.
+
+The existing ResolverListener interface is still available.  This
+interface requires each response to be handled by a new server thread.
+
+However, a new interface, using a ResponseQueue, is also supported.  To
+use this interface, the caller must pass in a ResponseQueue to the
+sendAsync() call.  When the response is available, it will be added to
+the blocking queue.  The caller must simply remove the response from
+the queue, and process it in its own thread.
+
+This functionality allows DNS queries to be run in a single thread, and
+be sent over a single port.
+
+NB: the test code is intended to exercise dnsjnio.  It can take several
+minutes to run.
+
+
+Version
+-------
+
+This code will run against dnsjava-2.0.0 and dnsjava-2.0.2.  It is
+necessary to download and install the correct version of dnsjava before
+using this library.
+
+Demo
+----
+
+Running 'ant demo' will run the demo code, demo/DemoClient.java. This
+code loads a list of names from demo/to_resolve.txt, and resolves them
+all in a single thread over a single port.
+
+
+Licensing
+---------
+
+This project is licensed under the Mozilla Public License.
+
+The contents of this file are subject to the Mozilla Public Licence
+Version 1.1 (the `Licence'); you may not use this file except in
+compliance with the Licence.  You may obtain a copy of the Licence at
+http://www.mozilla.org/MPL
+
+Software distributed under the Licence is distributed on an `AS IS'
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+the Licence of the specific language governing rights and limitations
+under the Licence.
+
+The Original Code is dnsjnio.
+
+The Initial Developer of the Original Code is Nominet UK
+(http://www.nominet.org.uk).  Portions created by Nominet UK are
+Copyright (c) Nominet UK 2006.  All rights reserved.
+
+Contact
+=======
+
+alexd@nominet.org.uk
