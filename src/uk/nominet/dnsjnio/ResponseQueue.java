@@ -24,8 +24,9 @@ import java.util.LinkedList;
  * It blocks threads wishing to remove an object from the queue
  * until an object is available.
  */
-public class ResponseQueue extends LinkedList
+public class ResponseQueue
 {
+	private LinkedList list = new LinkedList();
 	private int waitingThreads = 0;
                                                                                         
     /**
@@ -34,21 +35,21 @@ public class ResponseQueue extends LinkedList
      */
     public synchronized void insert(Response response)
 	{
-		addLast(response);
+		list.addLast(response);
 		notify();
 	}
 
-	public synchronized Response remove()
+	public synchronized Response getItem()
 	{
 		if ( isEmpty() ) {
 			try	{ waitingThreads++; wait();}
 			catch (InterruptedException e)	{Thread.interrupted();}
 			waitingThreads--;
 		}
-		return (Response)removeFirst();
+		return (Response)(list.removeFirst());
 	}
 
 	public boolean isEmpty() {
-		return 	(size() - waitingThreads <= 0);
+		return 	(list.size() - waitingThreads <= 0);
 	}
 }

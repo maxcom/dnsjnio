@@ -95,6 +95,7 @@ public class Timer {
     private static synchronized void checkTimerStarted() {
         if (!threadStarted) {
             threadStarted = true;
+            timerThread.setDaemon(true);
             timerThread.start();
         }
     }

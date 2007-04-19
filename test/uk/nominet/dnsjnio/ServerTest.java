@@ -65,7 +65,7 @@ public class ServerTest extends TestCase {
         Integer id = new Integer(idCount++);
         ResponseQueue queue = new ResponseQueue();
         resolver.sendAsync(query, id, queue);
-        Response result = queue.remove();
+        Response result = queue.getItem();
         assertTrue("Exception thrown " + result.getException(), !result.isException());
         assertTrue(result.getMessage().getRcode() == 0);
         assertTrue(result.getId() == id);
@@ -81,7 +81,7 @@ public class ServerTest extends TestCase {
         Integer id = new Integer(idCount++);
         ResponseQueue queue = new ResponseQueue();
         resolver.sendAsync(query, id, queue);
-        Response result = queue.remove();
+        Response result = queue.getItem();
         assertTrue(result.getId() == id);
         if (!result.isException()) {
             fail("Response received for impossible query!");
@@ -110,7 +110,7 @@ public class ServerTest extends TestCase {
             Integer id = new Integer(idCount++);
             ResponseQueue queue = new ResponseQueue();
             resolver.sendAsync(query, id, queue);
-            Response result = queue.remove();
+            Response result = queue.getItem();
             assertTrue(result != null);
 //            System.out.println("Got back " + i + ", " + (result.getException() instanceof SocketTimeoutException ? "timed out" : "OK"));
             if (result.isException() || result.getException() != null) {
@@ -148,7 +148,7 @@ public class ServerTest extends TestCase {
             resolver.sendAsync(query, id, queue);
         }
         for (int i = startId; i < startId + numRequests; i++) {
-            Response response = queue.remove();
+            Response response = queue.getItem();
             if (!response.isException()) {
 //                System.out.println(i +  ", Result " + response.getId() + " received OK");
             } else {
@@ -184,7 +184,7 @@ public class ServerTest extends TestCase {
         }
 
         for (int i = 0; i < numClients; i++) {
-            Response response = queue.remove();
+            Response response = queue.getItem();
             if (!response.isException()) {
 //                System.out.println("Result " + response.getId() + " received OK");
             } else {
@@ -269,7 +269,7 @@ public class ServerTest extends TestCase {
         ResponseQueue queue = new ResponseQueue();
         long startTime = System.currentTimeMillis();
         resolver.sendAsync(query, id, 1, false, queue);
-        Response result = queue.remove();
+        Response result = queue.getItem();
         assertTrue(result.getId() == id);
         long endTime = System.currentTimeMillis();
         long time = startTime - endTime;

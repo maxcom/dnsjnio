@@ -18,7 +18,6 @@
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.*;
-import uk.nominet.mailspank.dns.TcpResponder;
 
 import java.io.IOException;
 import java.net.*;

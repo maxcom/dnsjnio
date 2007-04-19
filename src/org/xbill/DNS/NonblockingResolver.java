@@ -200,7 +200,7 @@ public class NonblockingResolver implements INonblockingResolver {
 
         ResponseQueue queue = new ResponseQueue();
         Object id = sendAsync(query, queue);
-        Response response = queue.remove();
+        Response response = queue.getItem();
         if (response.getId() != id) {
             throw new IllegalStateException("Wrong id ("+  response.getId() + ", should be " + id + ") returned from sendAsync()!");
         }

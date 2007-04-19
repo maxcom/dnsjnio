@@ -15,7 +15,7 @@
  Nominet UK are Copyright (c) Nominet UK 2006.
  All rights reserved.
 */
-package uk.nominet.mailspank.dns;
+package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.Message;
 import uk.nominet.dnsjnio.TestServer;

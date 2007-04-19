@@ -66,7 +66,7 @@ public class DemoClient {
         int goodCount = 0;
         int errorCount = 0;
         for (int i = 0; i < toResolve.size(); i++) {
-            Response response = responseQueue.remove();
+            Response response = responseQueue.getItem();
             if (response.isException()) {
 //                System.out.println("Got exception from " + toResolve.get(i) + ", error : " + response.getException().getMessage());
                 errorCount++;

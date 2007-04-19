@@ -60,6 +60,7 @@ public class DnsController {
                 selectLoop();
             }
         };
+        selectThread.setDaemon(true);
         selectThread.start();
     }
 
