@@ -30,9 +30,10 @@ public class ExtendedResolverTest extends TestCase {
 
 	final static int PORT = TestServer.PORT;
 
-	final static int TIMEOUT = 10;
+	final static int TIMEOUT = 2;
 
-	final static int NUM_SERVERS = 10;
+	final static int NUM_SERVERS = 5;
+	final static int NUM_REQUESTS = 10;
 
 	TestServer[] servers;
 
@@ -46,22 +47,21 @@ public class ExtendedResolverTest extends TestCase {
 		// Start up a load of resolvers on localhost (running on different
 		// ports)
 		stopServers();
+		System.out.println("Starting servers");
 		servers = new TestServer[numServers];
 		resolvers = new NonblockingResolver[NUM_SERVERS];
 		for (int i = 0; i < numServers; i++) {
-			servers[i] = TestServer.startServer(PORT + 1 + i, 10, 1);
+			servers[i] = TestServer.startServer(PORT + 1 + i, NUM_REQUESTS + 1, 1);
 			NonblockingResolver res = new NonblockingResolver(SERVER);
+			res.setTimeout(TIMEOUT);
 			res.setPort(PORT + 1 + i);
 			resolvers[i] = res;
-		}
-		// Start up an ExtendedNonblockingResolver with all of these as
-		// instances.
-		for (int i = 0; i < NUM_SERVERS; i++) {
 		}
 		eres = new ExtendedNonblockingResolver(resolvers);
 	}
 
 	private void stopServers() {
+		System.out.println("Stopping servers");
 		if (servers != null) {
 			for (int i = 0; i < servers.length; i++) {
 				servers[i].stopRunning();
@@ -80,12 +80,15 @@ public class ExtendedResolverTest extends TestCase {
 		runAllBadTest();
 		// c) Some servers return response, others throw exceptions
 		runSomeGoodTest();
+		// d) Now try a synchronous test
+		runSynchronousTest();
 		stopServers();
 	}
 
 	public void runAllGoodTest() throws Exception {
 		// Set all servers to return response (with random time delays)
 		// Then send the query and make sure it comes back OK.
+		System.out.println("runAllGoodTest");
 		runMultipleQueries(true);
 	}
 
@@ -93,6 +96,7 @@ public class ExtendedResolverTest extends TestCase {
 		// b) All servers time out or throw other exception
 		// Set all servers to fail (with random time delays)
 		// Then send the query and make sure it throws an exception.
+		System.out.println("runAllBadTest");
 		runMultipleQueries(false);
 	}
 
@@ -101,7 +105,27 @@ public class ExtendedResolverTest extends TestCase {
 		// Set some servers to fail and some to return (with random time delays)
 		// Then send the query and make sure it returns.
 		// @todo!! How can we implement this?
+		System.out.println("runSomeGoodTest");
 		runMultipleQueries(true);
+	}
+
+	public void runSynchronousTest() throws Exception {
+		System.out.println("runSynchronousTest");
+		// Try getting a good reply
+		Name name = Name.fromString("example.net", Name.root);
+		Record question = Record.newRecord(name, Type.A, DClass.ANY);
+		Message query = Message.newQuery(question);
+		ResponseQueue queue = new ResponseQueue();
+		eres.sendAsync(query, queue);
+		Response response = queue.getItem();
+		assertTrue(!(response.isException()));
+		// And try getting a timeout
+		name = Name.fromString("example.net", Name.root);
+		question = Record.newRecord(name, Type.A, DClass.ANY);
+		query = Message.newQuery(question);
+		eres.sendAsync(query, queue);
+		response = queue.getItem();
+		assertTrue((response.isException()));
 	}
 
 	private void runMultipleQueries(boolean expectedOk) throws Exception {
@@ -113,18 +137,17 @@ public class ExtendedResolverTest extends TestCase {
 		}
 		Record question = Record.newRecord(name, Type.A, DClass.ANY);
 		Message query = Message.newQuery(question);
-		int numRequests = 100;
 		int bad = 0;
 
 		ResponseQueue queue = new ResponseQueue();
-		for (int i = 0; i < numRequests; i++) {
+		for (int i = 0; i < NUM_REQUESTS; i++) {
 			int headerId = headerIdCount;
 			headerId = headerIdCount++;
 			query.getHeader().setID(headerId);
-			System.out.println("Sending Query");
+			System.out.println("Sending Query " + headerId);
 			eres.sendAsync(query, queue);
 		}
-		for (int i = 0; i < numRequests; i++) {
+		for (int i = 0; i < NUM_REQUESTS; i++) {
 			System.out.println("Waiting on next item");
 			Response response = queue.getItem();
 			if (!response.isException()) {
@@ -141,19 +164,8 @@ public class ExtendedResolverTest extends TestCase {
 			}
 		}
 		if (expectedOk) {
-			assertTrue(bad == numRequests);
-		} else
 			assertTrue(bad == 0);
+		} else
+			assertTrue(bad == NUM_REQUESTS);
 	}
-
-	// public class ENBRTestVersion extends ExtendedNonblockingResolver {
-	// public ENBRTestVersion() throws UnknownHostException {
-	// super();
-	// }
-	// public
-	// ENBRTestVersion(Resolver [] res) throws UnknownHostException {
-	// super (res);
-	// }
-	//		
-	// }
 }
