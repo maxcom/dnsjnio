@@ -31,14 +31,22 @@ public class UdpResponder extends Thread {
     private static int idCount = 0;
     private int id = 0;
     private Random random = new Random();
+    private TestServer server;
+    private boolean keepRunning = true;
 
-    public UdpResponder(DatagramSocket s) {
+    public UdpResponder(DatagramSocket s, TestServer server) {
         socket = s;
         id = idCount++;
+        this.server = server;
+    }
+    
+    public void stopRunning() {
+    	keepRunning = false;
+    	interrupt();
     }
 
     public void run() {
-        while (true) {
+        while (keepRunning) {
             processClientRequest();
         }
     }
@@ -70,7 +78,7 @@ public class UdpResponder extends Thread {
                 Message query = new Message(bytes);
 //                    printMsg(query.toString());
 
-                Message response = TestServer.formResponse(query);
+                Message response = server.formResponse(query);
                 if (response != null) {
 
                     try {
@@ -85,7 +93,7 @@ public class UdpResponder extends Thread {
                 }
             }
             catch (IOException e) {
-                TestServer.printMsg("Can't get Message from input!" + bytes);
+                server.printMsg("Can't get Message from input!" + bytes);
                 e.printStackTrace();
             }
         }

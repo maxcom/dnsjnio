@@ -23,7 +23,26 @@ import junit.framework.TestCase;
  * Exercise the ExtendedNonblockingResolver a little
  */
 public class ExtendedResolverTest extends TestCase {
+    final static String SERVER = "localhost";
+    final static int PORT = TestServer.PORT;
+//    final static int PORT = 53;
+    final static int TIMEOUT = 10;
+    final static int NUM_SERVERS = 10;
+    
+    private void startServers(int numServers) {
+    	for (int i = 0; i < numServers; i++) {
+//            TestServer.startServer(PORT + i, 10, 1);    		
+    	}
+    }
+
     public void testExtendedResolver() {
+    	// Start up a load of resolvers on localhost (running on different ports)
+    	startServers(NUM_SERVERS);
+    	// Start up an ExtendedNonblockingResolver with all of these as instances.
+    	// Run some tests on these servers where :
+    	//    a) All servers return response (with random time delays)
+    	//    b) All servers time out or throw other exception
+    	//    c) Some servers return response, others throw exceptions
         // @todo!!
     }
 }

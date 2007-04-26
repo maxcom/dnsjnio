@@ -28,18 +28,27 @@ import java.util.Map;
 public class ListenerTest extends TestCase {
     final static String SERVER = "localhost";
     final static int PORT = TestServer.PORT;
-//    final static int PORT = 53;
     final static int TIMEOUT = 10;
     private int idCount = 0;
     private Map results = Collections.synchronizedMap(new HashMap());
     static int threadId = 0;
     Object lock = new Object();
+    static TestServer server = TestServer.startServer();
 
     public void setUp() {
         reset();
-        TestServer.startServer();
+//        server = TestServer.startServer();
     }
-
+//    
+//    public void tearDown() {
+//    	server.stopServer();
+//    }
+//
+    
+    public void finalize() {
+       server.stopRunning();    	
+    }
+    
     private void reset() {
         resetResults();
         idCount = 0;
