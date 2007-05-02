@@ -32,8 +32,9 @@ public class ExtendedResolverTest extends TestCase {
 
 	final static int TIMEOUT = 2;
 
-	final static int NUM_SERVERS = 5;
-	final static int NUM_REQUESTS = 10;
+	final static int NUM_SERVERS = 2;
+
+	final static int NUM_REQUESTS = 5;
 
 	TestServer[] servers;
 
@@ -51,7 +52,8 @@ public class ExtendedResolverTest extends TestCase {
 		servers = new TestServer[numServers];
 		resolvers = new NonblockingResolver[NUM_SERVERS];
 		for (int i = 0; i < numServers; i++) {
-			servers[i] = TestServer.startServer(PORT + 1 + i, NUM_REQUESTS + 1, 1);
+			servers[i] = TestServer.startServer(PORT + 1 + i, NUM_REQUESTS + 1,
+					1);
 			NonblockingResolver res = new NonblockingResolver(SERVER);
 			res.setTimeout(TIMEOUT);
 			res.setPort(PORT + 1 + i);
@@ -120,7 +122,7 @@ public class ExtendedResolverTest extends TestCase {
 		Response response = queue.getItem();
 		assertTrue(!(response.isException()));
 		// And try getting a timeout
-		name = Name.fromString("example.net", Name.root);
+		name = Name.fromString("timeout.example.net", Name.root);
 		question = Record.newRecord(name, Type.A, DClass.ANY);
 		query = Message.newQuery(question);
 		eres.sendAsync(query, queue);
@@ -149,7 +151,10 @@ public class ExtendedResolverTest extends TestCase {
 		}
 		for (int i = 0; i < NUM_REQUESTS; i++) {
 			System.out.println("Waiting on next item");
-			Response response = queue.getItem();
+			Response response;
+			synchronized (queue) {
+				response = queue.getItem();
+			}
 			if (!response.isException()) {
 				System.out.println(i + ", Result " + response.getId()
 						+ " received OK");

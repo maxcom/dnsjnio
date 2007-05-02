@@ -26,8 +26,8 @@ import java.util.LinkedList;
  */
 public class ResponseQueue
 {
-	private LinkedList list = new LinkedList();
-	private int waitingThreads = 0;
+	protected LinkedList list = new LinkedList();
+	protected  int waitingThreads = 0;
                                                                                         
     /**
      * This method is called internally to add a new Response to the queue.
@@ -41,7 +41,7 @@ public class ResponseQueue
 
 	public synchronized Response getItem()
 	{
-		if ( isEmpty() ) {
+		while ( isEmpty() ) {
 			try	{ waitingThreads++; wait();}
 			catch (InterruptedException e)	{Thread.interrupted();}
 			waitingThreads--;
