@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import org.xbill.DNS.*;
 
 import java.net.*;
+import java.io.*;
 
 /**
  * Exercise the ExtendedNonblockingResolver a little
@@ -117,17 +118,18 @@ public class ExtendedResolverTest extends TestCase {
 		Name name = Name.fromString("example.net", Name.root);
 		Record question = Record.newRecord(name, Type.A, DClass.ANY);
 		Message query = Message.newQuery(question);
-		ResponseQueue queue = new ResponseQueue();
-		eres.sendAsync(query, queue);
-		Response response = queue.getItem();
-		assertTrue(!(response.isException()));
+		Message response = eres.send(query);
+
 		// And try getting a timeout
 		name = Name.fromString("timeout.example.net", Name.root);
 		question = Record.newRecord(name, Type.A, DClass.ANY);
 		query = Message.newQuery(question);
-		eres.sendAsync(query, queue);
-		response = queue.getItem();
-		assertTrue((response.isException()));
+		try {
+			eres.send(query);
+			assertTrue("Should get a timeout", false);
+		} catch (IOException e) {
+			// OK
+		}
 	}
 
 	private void runMultipleQueries(boolean expectedOk) throws Exception {

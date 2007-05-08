@@ -19,277 +19,70 @@ import java.io.*;
  * (c) Nominet UK 2006. All rights reserved.
  */
 public class ExtendedNonblockingResolver {
-
-	private class NotifyingResponseQueue extends ResponseQueue {
-		Thread threadToBeNotified;
-
-		public void setNotifyThread(Thread toNotify) {
-			threadToBeNotified = toNotify;
-		}
-
-		public synchronized void insert(Response response) {
-			list.addLast(response);
-			notifyAll();
-//			threadToBeNotified.notify();
-			threadToBeNotified.interrupt();
-		}
-	}
-
-	private class RequestQueue extends NotifyingResponseQueue { // @todo@ Need
-																// to
-		// template this!
-		/**
-		 * This method is called internally to add a new QueryRequest to the
-		 * queue.
-		 * 
-		 * @param request
-		 *            the new QueryRequest
-		 */
-		public synchronized void insert(QueryRequest request) {
-			list.addLast(request);
-			notifyAll();
-//			threadToBeNotified.notify();
-			threadToBeNotified.interrupt();
-		}
-
-		public synchronized Response getItem() {
-			throw new RuntimeException("Not implemented!"); // @todo Fix this rubbish!
-		}
-
-		public synchronized QueryRequest getRequest() {
-			while (isEmpty()) {
-				try {
-					waitingThreads++;
-					wait();
-				} catch (InterruptedException e) {
-					Thread.interrupted();
-				}
-				waitingThreads--;
-			}
-			return (QueryRequest) (list.removeFirst());
-		}
-	}
+	// private class RequestQueue extends ResponseQueue {
+	// /**
+	// * This method is called internally to add a new QueryRequest to the
+	// * queue.
+	// *
+	// * @param request
+	// * the new QueryRequest
+	// */
+	// public synchronized void insert(QueryRequest request) {
+	// list.addLast(request);
+	// notifyAll();
+	// }
+	//
+	// public synchronized Response getItem() {
+	// throw new RuntimeException("Not implemented!"); // @todo Fix this
+	// rubbish!
+	// }
+	//
+	// public synchronized QueryRequest getRequest() {
+	// while (isEmpty()) {
+	// try {
+	// waitingThreads++;
+	// wait();
+	// } catch (InterruptedException e) {
+	// Thread.interrupted();
+	// }
+	// waitingThreads--;
+	// }
+	// return (QueryRequest) (list.removeFirst());
+	// }
+	// }
 
 	private class QueryRequest {
-		protected ExtendedNonblockingResolver eres;
-
 		protected ResponseQueue responseQueue;
 
 		protected Object responseId;
 
 		protected Message query;
 
-		public QueryRequest(ExtendedNonblockingResolver eres,
-				ResponseQueue responseQueue, Object responseId, Message query) {
-			this.eres = eres;
+		public QueryRequest(ResponseQueue responseQueue, Object responseId,
+				Message query) {
 			this.responseQueue = responseQueue;
 			this.responseId = responseId;
 			this.query = query;
 		}
+
+		// Each client request needs its own set of these
+		protected HashMap sent = new HashMap();
+
+		protected int outstanding = 0;
+
+		protected int currentIndex = 0;
+
+		protected NonblockingResolver currentResolver = null;
 	}
 
 	private class ResolutionThread extends Thread {
-		// So ENBR will start up a new query thread on startup.
-		// Thread will loop forever, listening for responses and sending new
-		// queries.
-		// When async client request comes in, ENBR sticks on queue and
-		// forgets about it.
-		// - client will handle queued responses
-		// When sync client request comes in, ENBR calls async and waits for
-		// completion.
+		NonblockingResolver[] resolvers;
 
-		// inputQueue contains QueryRequests
-		RequestQueue inputQueue;
+		ExtendedNonblockingResolver eres;
 
-		List notifyingResponseQueues = new LinkedList();
-
-		public ResolutionThread(RequestQueue inputQueue) {
-			this.inputQueue = inputQueue;
-			inputQueue.setNotifyThread(this);
-		}
-
-		public void run() {
-			while (true) {
-				// Need to run in a main loop, watching out for either a
-				// new item in the inputQueue, or a new response from a server
-				// Need to use wait.
-				// Then, responseQueue and requestQueue should notify us when
-				// something ready
-				System.out.println("Waiting for event");
-				try {
-					synchronized (this) {
-					wait();
-					}
-				} catch (InterruptedException e) {
-					Thread.interrupted();
-				}
-				System.out.println("Got an event");
-				// Was it the requestQueue or the responseQueue?
-				if (!inputQueue.isEmpty()) {
-					System.out.println("Was a request");
-					// Get a new request
-					QueryRequest request = inputQueue.getRequest();
-					notifyingResponseQueues.add(request.responseQueue);
-					startNewRequest(request);
-				} else {
-					// Check response queues
-					boolean gotResponse = false;
-					for (Iterator it = notifyingResponseQueues.iterator(); it
-							.hasNext();) {
-						NotifyingResponseQueue queue = (NotifyingResponseQueue) (it
-								.next());
-						if (!queue.isEmpty()) {
-							System.out.println("Was a response");
-							gotResponse = true;
-							// Get a new response
-							Response response = queue.getItem();
-							// @todo@ Do something with the response!
-							processResponse(response);
-						}
-						if (!gotResponse) {
-							throw new RuntimeException(
-									"Stray event in ResolutionThread!");
-						}
-					}
-				}
-				System.out.println("ResolutionThread waiting on request");
-				QueryRequest request = inputQueue.getRequest();
-				System.out.println("ResolutionThread got request");
-				queryLoop(request.eres, request.query, request.responseId,
-						request.responseQueue);
-			}
-		}
-
-		private void startNewRequest(QueryRequest request) {
-			// @todo Send the first request
-			throw new RuntimeException("Need to make first request");
-		}
-
-		private void processResponse(Response response) {
-			// @todo@ !!!
-			throw new RuntimeException("Implement processResponse!");
-		}
-
-		private void queryLoop(ExtendedNonblockingResolver eres, Message query,
-				Object clientId, ResponseQueue clientQueue) {
-			// The first server is queried for the name, and the response
-			// awaited.
-			// If the response is good, then it is returned to the caller. If it
-			// times out, then the next resolver is tried at the same time as
-			// retrying
-			// the first. If there is a transport problem, then the first
-			// resolver is not
-			// retried at all, but the action moves on to the next resolver
-			HashMap sent = new HashMap();
-			int outstanding = 0;
-			boolean done = false;
-			int currentIndex = 0;
-			NonblockingResolver[] resolvers;
-			NonblockingResolver currentResolver = null;
-			int retries;
-			NotifyingResponseQueue queryQueue = new NotifyingResponseQueue();
-			resolvers = getResolvers(eres);
-			// Object[] inprogress = new Object[resolvers.length];
-			retries = eres.retries;
-			while (!done) {
-				if (currentIndex < resolvers.length) {
-					// Send a query on the next resolver
-					System.out.println("Sending to new resolver "
-							+ currentIndex);
-					currentResolver = resolvers[currentIndex++];
-					currentResolver.sendAsync(query, currentResolver,
-							queryQueue);
-					sent.put(currentResolver, new Integer(1));
-					outstanding++;
-					System.out.println("oustanding = " + outstanding);
-				} else {
-					System.out.println("No more resolvers to try");
-				}
-				if (outstanding == 0) {
-					sendExceptionToClient(clientId, clientQueue);
-					return;
-				}
-				boolean doneInnerLoop = false;
-				while (!doneInnerLoop) {
-					Response response = queryQueue.getItem();
-					System.out.println("Got response " + response
-							+ ", is Exception == " + response.isException());
-					outstanding--;
-					System.out.println("oustanding = " + outstanding);
-					if (response.isException()) {
-						// Exception - what do we do now?
-						// If it is a timeout then we should retry up to retries
-						// times
-						if (response.getException() instanceof InterruptedIOException) {
-							NonblockingResolver res = (NonblockingResolver) (response
-									.getId());
-							System.out.println("Got an exception from " + res);
-							if (((Integer) (sent.get(res))).intValue() < retries) {
-								System.out.println("Sending again to " + res);
-								res.sendAsync(query, res, queryQueue);
-								outstanding++;
-								System.out.println("oustanding = "
-										+ outstanding);
-								Integer i = (Integer) (sent.get(res));
-								i = new Integer(i.intValue() + 1);
-								sent.remove(res);
-								sent.put(res, i);
-							} else {
-								System.out.println("Not sending again to "
-										+ res + ", as " + retries
-										+ " retries exceeded");
-							}
-						} else {
-							System.out.println("Got other exception ("
-									+ response.getException()
-									+ ") - ignoring that server");
-						}
-						if (outstanding == 0) {
-							sendExceptionToClient(clientId, clientQueue);
-							return;
-						}
-					} else {
-						// Got a response! Now what do we do with it?
-						System.out.println("Got good response");
-						if (Options.check("verbose"))
-							System.err.println("ExtendedResolver: "
-									+ "received message");
-						response.setId(clientId);
-						response.setException(false);
-						clientQueue.insert(response);
-						return;
-					}
-					if (response.getId() == (currentResolver)) {
-						// Response from the latest resolver - let's try the
-						// next one
-						// (if there is one)
-						System.out.println("Got response for currentResolver ("
-								+ currentResolver
-								+ ") - trying next resolver for first time");
-						if (currentIndex < resolvers.length) {
-							doneInnerLoop = true;
-						}
-					}
-				}
-			}
-		}
-
-		private void sendExceptionToClient(Object clientId,
-				ResponseQueue clientQueue) {
-			// Uh oh! Run out of nameservers to query
-			// Best throw TimeoutException
-			System.out.println("Sending back exception to client");
-			Response replyToClient = new Response();
-			replyToClient.setException(new InterruptedIOException());
-			replyToClient.setException(true);
-			replyToClient.setId(clientId);
-			clientQueue.insert(replyToClient);
-		}
-
-		private NonblockingResolver[] getResolvers(
-				ExtendedNonblockingResolver eres) {
+		public ResolutionThread(ExtendedNonblockingResolver eres) {
 			List l = eres.resolvers;
-			NonblockingResolver[] resolvers = (NonblockingResolver[]) l
+			resolvers = (NonblockingResolver[]) l
 					.toArray(new NonblockingResolver[l.size()]);
 			if (eres.loadBalance) {
 				int nresolvers = resolvers.length;
@@ -309,8 +102,170 @@ public class ExtendedNonblockingResolver {
 					resolvers = shuffle;
 				}
 			}
-			return resolvers;
 		}
+
+		private Map clientRequests = new HashMap();
+
+		ResponseQueue queryQueue = new ResponseQueue();
+
+		private void startNewRequest(final Message query, final Object id,
+				final ResponseQueue responseQueue) {
+			// Send the first request
+			// This is done in the client thread by making an asynchronous
+			// request
+			// using the queryQueue as the response queue.
+			// @todo@ Do we need to check the ID to make sure it is not
+			// currently in use?
+			// Send a query on the next resolver
+			QueryRequest request = new QueryRequest(responseQueue, id, query);
+			String name = request.query.getQuestion().getName().toString();
+//			System.out.println("Sending first request for " + name
+//					+ " to new resolver " + request.currentIndex);
+			sendQueryToNextResolver(request);
+
+			clientRequests.put(request.responseId, request);
+		}
+
+		private void processResponse(Response response, QueryRequest request) {
+			// Stick the response in the client queue
+			if (clientRequests.containsKey(request.responseId)) {
+				// First take the client request out the list
+				clientRequests.remove(request.responseId);
+
+				response.setId(request.responseId);
+				response.setException(false);
+				// Now queue the response for the client.
+				request.responseQueue.insert(response);
+			} else {
+				// No longer have the request so must have responded. Ignore it.
+				System.out.println("ERROR - ProcessResponse ignoring good response due to no known request");
+			}
+		}
+
+		// private void queryLoop(Message query, Object clientId, ResponseQueue
+		// clientQueue) {
+		public void run() {
+			// The first server is queried for the name, and the response
+			// awaited.
+			// If the response is good, then it is returned to the caller. If it
+			// times out, then the next resolver is tried at the same time as
+			// retrying
+			// the first. If there is a transport problem, then the first
+			// resolver is not
+			// retried at all, but the action moves on to the next resolver
+			// Object[] inprogress = new Object[resolvers.length];
+			while (true) {
+				// We have a load of client requests currently on the go.
+				// each client request may have multiple queries outstanding on
+				// multiple resolvers.
+				// however, ALL dns queries use the same responseQueue
+				// so we just wait on the next response and do the appropriate
+				// thing
+				Response nextResponse = queryQueue.getItem();
+				// Now we need to match it up to a request
+				QueryRequest request = ((QueryId)(nextResponse.getId())).request;
+				request.outstanding--;
+
+				// Then do the appropriate thing depending on the response
+				if (nextResponse.isException()) {
+					// deal with exception
+					// If timeout then we should retry up to retries times
+					if (nextResponse.getException() instanceof InterruptedIOException) {
+						dealWithTimeout(nextResponse, request);
+					} else {
+//						System.out.println("Got other exception ("
+//								+ nextResponse.getException()
+//								+ ") - ignoring that server");
+					}
+					if (request.outstanding == 0) {
+						sendExceptionToClient(request);
+						continue;
+					}
+				} else {
+					// deal with good response
+					processResponse(nextResponse, request);
+					continue;
+				}
+				if (((QueryId)(nextResponse.getId())).resolver == (request.currentResolver)) {
+					// Response from the latest resolver - let's try the
+					// next one
+					// (if there is one)
+//					System.out.println("Got response for currentResolver ("
+//							+ request.currentResolver
+//							+ ") - trying next resolver for first time");
+					queryNextResolver(request);
+				}
+				if (request.outstanding == 0) {
+					sendExceptionToClient(request);
+					continue;
+				}
+			}
+		}
+
+		private void dealWithTimeout(Response nextResponse, QueryRequest request) {
+			NonblockingResolver res = ((QueryId)(nextResponse.getId())).resolver;
+//			System.out.println("Got an exception from " + res);
+			if (((Integer) (request.sent.get(res))).intValue() < retries) {
+//				System.out.println("Sending again to " + res);
+				QueryId id = new QueryId(request, res);
+				res.sendAsync(request.query, id, queryQueue);
+				request.outstanding++;
+//				System.out.println("oustanding = " + request.outstanding);
+				Integer i = (Integer) (request.sent.get(res));
+				i = new Integer(i.intValue() + 1);
+				request.sent.remove(res);
+				request.sent.put(res, i);
+			} else {
+//				System.out.println("Not sending again to " + res + ", as "
+//						+ retries + " retries exceeded");
+			}
+		}
+
+		private void queryNextResolver(QueryRequest request) {
+			if (request.currentIndex < resolvers.length) {
+				// Send a query on the next resolver
+//				System.out.println("Sending to new resolver "
+//						+ request.currentIndex);
+				sendQueryToNextResolver(request);
+			} else {
+//				System.out.println("No more resolvers to try");
+			}
+		}
+		
+		private class QueryId {
+			protected QueryRequest request;
+			protected NonblockingResolver resolver;
+			public QueryId (QueryRequest request, NonblockingResolver resolver) {
+				this.request = request;
+				this.resolver = resolver;
+			}
+		}
+
+		private void sendQueryToNextResolver(QueryRequest request) {
+			request.currentResolver = resolvers[request.currentIndex++];
+			QueryId id = new QueryId (request, request.currentResolver);
+			request.currentResolver.sendAsync(request.query,
+					id, queryQueue);
+			request.sent.put(request.currentResolver, new Integer(1));
+			request.outstanding++;
+//			System.out.println("oustanding = " + request.outstanding);
+		}
+
+		private void sendExceptionToClient(QueryRequest request) {
+			// Uh oh! Run out of nameservers to query
+			// Best throw TimeoutException
+//			System.out.println("Sending back exception to client");
+
+			// First take the client request out the list
+			clientRequests.remove(request.responseId);
+
+			Response replyToClient = new Response();
+			replyToClient.setException(new InterruptedIOException());
+			replyToClient.setException(true);
+			replyToClient.setId(request.responseId);
+			request.responseQueue.insert(replyToClient);
+		}
+
 	}
 
 	private static final int quantum = 5;
@@ -325,16 +280,7 @@ public class ExtendedNonblockingResolver {
 
 	static int idCount = 0;
 
-	private RequestQueue requestQueue;
-
 	private ResolutionThread resolutionThread;
-
-	private void init() {
-		requestQueue = new RequestQueue();
-		resolvers = new ArrayList();
-		resolutionThread = new ResolutionThread(requestQueue);
-		resolutionThread.start();
-	}
 
 	/**
 	 * Creates a new Extended Resolver. The default ResolverConfig is used to
@@ -347,7 +293,7 @@ public class ExtendedNonblockingResolver {
 	 *                Failure occured initializing NonblockingResolvers
 	 */
 	public ExtendedNonblockingResolver() throws UnknownHostException {
-		init();
+		resolvers = new ArrayList();
 		String[] servers = ResolverConfig.getCurrentConfig().servers();
 		if (servers != null) {
 			for (int i = 0; i < servers.length; i++) {
@@ -357,6 +303,12 @@ public class ExtendedNonblockingResolver {
 			}
 		} else
 			resolvers.add(new NonblockingResolver());
+		startResolutionThread();
+	}
+
+	private void startResolutionThread() {
+		resolutionThread = new ResolutionThread(this);
+		resolutionThread.start();
 	}
 
 	/**
@@ -370,9 +322,10 @@ public class ExtendedNonblockingResolver {
 	 */
 	public ExtendedNonblockingResolver(Resolver[] res)
 			throws UnknownHostException {
-		init();
+		resolvers = new ArrayList();
 		for (int i = 0; i < res.length; i++)
 			resolvers.add(res[i]);
+		startResolutionThread();
 	}
 
 	/**
@@ -399,10 +352,8 @@ public class ExtendedNonblockingResolver {
 
 	/**
 	 * Asynchronously sends a message to multiple servers, potentially multiple
-	 * times, registering a listener to receive a callback on success or
+	 * times, registering a queue to receive a response on success or
 	 * exception. Multiple asynchronous lookups can be performed in parallel.
-	 * Since the callback may be invoked before the function returns, external
-	 * synchronization is necessary.
 	 * 
 	 * @param query
 	 *            The query to send
@@ -418,8 +369,7 @@ public class ExtendedNonblockingResolver {
 
 	public void sendAsync(final Message query, final Object id,
 			final ResponseQueue responseQueue) {
-		QueryRequest request = new QueryRequest(this, responseQueue, id, query);
-		requestQueue.insert(request);
+		resolutionThread.startNewRequest(query, id, responseQueue);
 	}
 
 	/** Returns the nth resolver used by this ExtendedResolver */
