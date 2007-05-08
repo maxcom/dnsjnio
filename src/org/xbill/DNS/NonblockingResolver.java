@@ -47,7 +47,15 @@ public class NonblockingResolver implements INonblockingResolver {
     private OPTRecord queryOPT;
 
     private static String defaultResolver = "localhost";
-    private static int uniqueID = 0;
+    // Use short as id because the id header is limited to 16 bit
+    // From RFC1035 4.1.1. Header section format :
+    // 
+    // ID              A 16 bit identifier assigned by the program that
+    //                 generates any kind of query.  This identifier is copied
+    //                 the corresponding reply and can be used by the requester
+    //                 to match up replies to outstanding queries.
+    //
+    private static short uniqueID = 0;
     private SinglePortTransactionController transactionController;
 
     /**
