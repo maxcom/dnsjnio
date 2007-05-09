@@ -33,7 +33,7 @@ import java.util.ArrayList;
  * all the queries in a single thread, over a single socket.
  */
 public class DemoClient {
-    final String filename = "to_resolve.txt";
+    final String filename = "demo/to_resolve.txt";
     NonblockingResolver resolver;
 
     public static void main(String[] args) throws Exception {
@@ -51,7 +51,7 @@ public class DemoClient {
         }
         ArrayList toResolve = loadFile(name);
         resolver = new NonblockingResolver();
-        resolver.setTimeout(10);
+        resolver.setTimeout(30);
         resolver.setTCP(true);
         ResponseQueue responseQueue = new ResponseQueue();
         // Send all the queries asynchronously
