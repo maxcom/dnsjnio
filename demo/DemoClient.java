@@ -23,6 +23,7 @@ import uk.nominet.dnsjnio.ResponseQueue;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 /**
@@ -33,7 +34,7 @@ import java.util.ArrayList;
  * all the queries in a single thread, over a single socket.
  */
 public class DemoClient {
-    final String filename = "demo/to_resolve.txt";
+    final String filename = "to_resolve.txt";
     NonblockingResolver resolver;
 
     public static void main(String[] args) throws Exception {
@@ -95,8 +96,18 @@ public class DemoClient {
 
         String line;
         ArrayList fileList = new ArrayList();
-
-            BufferedReader in = new BufferedReader(new FileReader(fileName));
+        BufferedReader in;
+        try {
+            in = new BufferedReader(new FileReader(fileName));
+        }
+        catch (FileNotFoundException e) {
+        	try {
+            in = new BufferedReader(new FileReader("demo\\"+ fileName));
+        	}
+        	catch (FileNotFoundException ex) {
+        		throw new FileNotFoundException("Can't find " + fileName + " or demo\\" + fileName);
+        	}
+        }
 
             if (!in.ready())
                 throw new IOException();
