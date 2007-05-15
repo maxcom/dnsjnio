@@ -78,7 +78,7 @@ public class UdpResponder extends Thread {
                 Message query = new Message(bytes);
 //                    printMsg(query.toString());
 
-                Message response = server.formResponse(query);
+                Message response = server.formResponse(query, socket.getPort());
                 if (response != null) {
 
                     try {

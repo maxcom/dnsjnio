@@ -25,6 +25,9 @@ the queue, and process it in its own thread.
 This functionality allows DNS queries to be run in a single thread, and
 be sent over a single port.
 
+Please see the docs/notes.txt file for more information on the inner
+workings of dnsjnio.
+
 NB: the test code is intended to exercise dnsjnio.  It can take several
 minutes to run.
 
@@ -32,9 +35,9 @@ minutes to run.
 Version
 -------
 
-This code will run against dnsjava-2.0.0 and dnsjava-2.0.2.  It is
-necessary to download and install the correct version of dnsjava before
-using this library.
+This code will run against dnsjava-2.0.0 -> dnsjava-2.0.3 inclusive.  
+It is necessary to download and install the correct version of dnsjava 
+before using this library.
 
 Demo
 ----

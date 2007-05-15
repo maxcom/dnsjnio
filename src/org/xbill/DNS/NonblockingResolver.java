@@ -57,6 +57,7 @@ public class NonblockingResolver implements INonblockingResolver {
     //
     private static short uniqueID = 0;
     private SinglePortTransactionController transactionController;
+    private boolean useSinglePort = true;
 
     /**
      * Creates a SimpleResolver that will query the specified host
@@ -112,6 +113,10 @@ public class NonblockingResolver implements INonblockingResolver {
     public void
             setIgnoreTruncation(boolean flag) {
         this.ignoreTruncation = flag;
+    }
+    
+    public void setSinglePort(boolean useSamePort) {
+    	this.useSinglePort = useSamePort;
     }
 
 //    public void

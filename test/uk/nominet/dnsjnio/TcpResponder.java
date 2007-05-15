@@ -105,7 +105,7 @@ public class TcpResponder extends Thread {
 						Message query = new Message(inputBytes);
 						// System.out.println("TcpResponder : Received query id
 						// = " + query.getHeader().getID());
-						Message response = server.formResponse(query);
+						Message response = server.formResponse(query, clientSocket.getPort());
 
 						if (response != null) {
 							byte[] bytes = response.toWire(Message.MAXLENGTH);

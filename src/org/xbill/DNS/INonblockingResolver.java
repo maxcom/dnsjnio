@@ -33,4 +33,5 @@ public interface INonblockingResolver extends Resolver {
             sendAsync(final Message query, Object id, final ResponseQueue responseQueue);
     public void
             sendAsync(final Message query, Object id, int timeout, boolean useTCP, final ResponseQueue responseQueue);
+    public void setSinglePort(boolean useSamePort);
 }

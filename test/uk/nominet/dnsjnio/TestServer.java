@@ -22,6 +22,7 @@ import org.xbill.DNS.*;
 import java.io.IOException;
 import java.net.*;
 import java.util.Random;
+import java.util.*;
 
 /**
  * This class needs to listen for requests from the test code.
@@ -115,7 +116,7 @@ public class TestServer extends Thread {
         System.out.println(msg);
     }
 
-    public Message formResponse(Message query) throws UnknownHostException, TextParseException {
+    public Message formResponse(Message query, int port) throws UnknownHostException, TextParseException {
         try {
             sleep(random.nextInt(500));
         }
@@ -130,6 +131,11 @@ public class TestServer extends Thread {
             response.addRecord(newRec, 1);
             Record nsRec = new NSRecord(query.getQuestion().getName(), 1, 3600, Name.fromString("example.com."));
             response.addRecord(nsRec, 2);
+            // Add a record with the query source port number
+            List txt = new LinkedList();
+            txt.add(String.valueOf(port));
+            Record portRec = new TXTRecord(query.getQuestion().getName(), 1, 3600, txt);
+            response.addRecord(portRec, 2);
         } else if (query.getQuestion().getName().toString().startsWith("timeout")) {
             try {
                 sleep(2100);

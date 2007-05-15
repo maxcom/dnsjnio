@@ -1,0 +1,11 @@
+The basic idea of dnsjnio is to plug in a non-blocking
+Resolver implementation to dnsjava.
+
+The org.xbill.DNS.INonblockingResolver extends the dnsjava
+Resolver implementation to define an alternative to the
+callback mechanism (which is still supported but not
+recommended as an extra thread is required and there is
+a slight race hazard implicit in the interface).
+
+Queries are made in the client thread. The NonblockingResolver
+implementation 
