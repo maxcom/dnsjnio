@@ -293,7 +293,14 @@ public class ExtendedNonblockingResolver {
 	 * @exception UnknownHostException
 	 *                Failure occured initializing NonblockingResolvers
 	 */
-	public ExtendedNonblockingResolver(Resolver[] res)
+	public static ExtendedNonblockingResolver newInstance(Resolver[] res) throws UnknownHostException {
+		// Don't allow the this reference to escape during construction
+		// (a thread is created and started in the constructor)
+		ExtendedNonblockingResolver enbr = new ExtendedNonblockingResolver(res);
+		return enbr;		
+	}
+	
+	private ExtendedNonblockingResolver(Resolver[] res)
 			throws UnknownHostException {
 		resolvers = new ArrayList();
 		for (int i = 0; i < res.length; i++)

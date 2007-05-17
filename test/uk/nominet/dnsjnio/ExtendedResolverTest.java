@@ -35,7 +35,7 @@ public class ExtendedResolverTest extends TestCase {
 
 	final static int NUM_SERVERS = 2;
 
-	final static int NUM_REQUESTS = 5;
+	final static int NUM_REQUESTS = 100;
 
 	TestServer[] servers;
 
@@ -60,7 +60,7 @@ public class ExtendedResolverTest extends TestCase {
 			res.setPort(PORT + 1 + i);
 			resolvers[i] = res;
 		}
-		eres = new ExtendedNonblockingResolver(resolvers);
+		eres = ExtendedNonblockingResolver.newInstance(resolvers);
 	}
 
 	private void stopServers() {
