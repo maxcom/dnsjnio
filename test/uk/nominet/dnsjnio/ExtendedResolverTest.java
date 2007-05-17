@@ -43,7 +43,7 @@ public class ExtendedResolverTest extends TestCase {
 
 	ExtendedNonblockingResolver eres;
 
-	static int headerIdCount = 0;
+	static volatile int headerIdCount = 0;
 
 	private void startServers(int numServers) throws Exception {
 		// Start up a load of resolvers on localhost (running on different
