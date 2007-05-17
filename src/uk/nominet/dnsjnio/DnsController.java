@@ -17,9 +17,13 @@
 */
 package uk.nominet.dnsjnio;
 
-import java.nio.channels.*;
 import java.io.IOException;
-import java.util.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class controls the I/O using the java.nio package.
@@ -80,9 +84,7 @@ public class DnsController {
 
             try {
                 selector.select();
-            } catch(Exception e) {
-                int deleteMe = 0;
-            }
+            } catch(Exception e) {}
 
             // process any selected keys
             Set selectedKeys = selector.selectedKeys();

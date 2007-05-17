@@ -17,7 +17,13 @@
 */
 package uk.nominet.dnsjnio;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class handles the timeouts for the Transaction objects.
@@ -26,7 +32,7 @@ import java.util.*;
  * A separate list is kept for single port transactions, and normal transactions.
  */
 public class Timer {
-    // @todo There has to be a better way than this!
+    // There has to be a better way than this!
     private final static Map timeouts = Collections.synchronizedMap(new HashMap());
     private final static Map singlePortTimeouts = Collections.synchronizedMap(new HashMap());
     private static boolean threadStarted = false;

@@ -23,7 +23,8 @@ the blocking queue.  The caller must simply remove the response from
 the queue, and process it in its own thread.
 
 This functionality allows DNS queries to be run in a single thread, and
-be sent over a single port.
+be sent over a single port (although the default is to a random port
+for each new query).
 
 Please see the docs/notes.txt file for more information on the inner
 workings of dnsjnio.

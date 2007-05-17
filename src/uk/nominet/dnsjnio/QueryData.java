@@ -18,8 +18,8 @@ All rights reserved.
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.Message;
-import org.xbill.DNS.TSIG;
 import org.xbill.DNS.ResolverListener;
+import org.xbill.DNS.TSIG;
 
 public class QueryData {
     Connection connection;

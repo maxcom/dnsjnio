@@ -17,14 +17,14 @@ All rights reserved.
 */
 package uk.nominet.dnsjnio;
 
-import org.xbill.DNS.NonblockingResolver;
-
-import java.nio.channels.SelectionKey;
-import java.nio.channels.ByteChannel;
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.net.InetSocketAddress;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.SelectionKey;
+import java.util.LinkedList;
+
+import org.xbill.DNS.NonblockingResolver;
 
 /**
  * The superclass for the TCP and UDP connections.
@@ -44,8 +44,8 @@ public abstract class Connection {
     protected int recvCount = 0;
     protected boolean writeReady = false;
 
-    protected InetSocketAddress addr;
-    protected String name = "unconnected";
+    protected InetSocketAddress remoteAddress;
+    protected InetSocketAddress localAddress;
     private int state = State.CLOSED;
 
     byte[] bytes;
@@ -85,29 +85,22 @@ public abstract class Connection {
         }
     }
 
-    public String getName() {
-        return name;
+    public String getRemoteName() {
+        return remoteAddress.getHostName();
     }
 
-    public void setName(String value) {
-        name = value;
+    public InetSocketAddress getRemoteAddress() {
+        return remoteAddress;
     }
 
-    public String getAddress() {
-        return addr.toString();
+    public InetSocketAddress getLocalAddress() {
+        return localAddress;
     }
 
-    public String getHost() {
-        return addr.getHostName();
-    }
-
-    public int getPort() {
-        return addr.getPort();
-    }
-
-    public void connect(InetSocketAddress address) {
+    public void connect(InetSocketAddress remoteAddress, InetSocketAddress localAddress) {
         if(getState() == State.CLOSED) {
-            setAddress(address);
+            setRemoteAddress(remoteAddress);
+            setLocalAddress(localAddress);
             setState(State.OPENING);
             if (! DnsController.isSelectThread()) {
                 DnsController.invoke(new Runnable() {
@@ -200,16 +193,18 @@ public abstract class Connection {
             writeReady = true;
         }
     }
-
-    protected void setAddress(InetSocketAddress addr) {
-        this.addr = addr;
-        setName(addr.getHostName());
+    
+    protected void setLocalAddress(InetSocketAddress localAddr) {
+    	this.localAddress = localAddr;
     }
 
-    protected void setAddress(String address) {
+    protected void setRemoteAddress(InetSocketAddress remoteAddr) {
+        this.remoteAddress = remoteAddr;
+    }
+
+    protected void setRemoteAddress(String address) {
         int n = address.indexOf(':');
         String pt = null;
-        setName(address);
         String host;
         int port= NonblockingResolver.DEFAULT_PORT;
         if(n == 0) {
@@ -229,7 +224,7 @@ public abstract class Connection {
                 port = -1;
             }
         }
-        setAddress(new InetSocketAddress(host, port));
+        setRemoteAddress(new InetSocketAddress(host, port));
     }
 
     protected void closeComplete() {

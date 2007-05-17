@@ -10,24 +10,31 @@ import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import junit.framework.TestCase;
+import java.net.*;
 
 public class PortTest extends TestCase {
 	final static String SERVER = "localhost";
 
 	final static int PORT = TestServer.PORT;
 
+	final static int LOCAL_PORT = 5678;
+
 	// final static int PORT = 53;
 	final static int TIMEOUT = 10;
 
 	int idCount = 0;
+
 	ResponseQueue queue = new ResponseQueue();
 
 	TestServer server = TestServer.startServer();
 
-	 public void setUp() {
-	 reset();
-	 }
-	
+	boolean singlePort; // do a single port test?
+
+	boolean useTcp;
+
+	public void setUp() {
+		reset();
+	}
 
 	public void finalize() {
 		server.stopRunning();
@@ -37,54 +44,56 @@ public class PortTest extends TestCase {
 		idCount = 0;
 		Timer.reset();
 	}
-	
-	public void testSamePort() throws Exception {
-		doTestManyAsynchronousClients(true);
-	}
-	
-	public void testDifferentPort() throws Exception {
-		doTestManyAsynchronousClients(false);
-	}
-	
-	boolean singlePort;
 
-	private void doTestManyAsynchronousClients(boolean samePort) throws Exception {
+	public void testSamePort() throws Exception {
+		singlePort = true;
+		runTheTest();
+	}
+
+	public void testDifferentPort() throws Exception {
+		singlePort = false;
+		runTheTest();
+	}
+
+	private void runTheTest() throws Exception {
+		// Try it on udp
+		useTcp = false;
+		doTestManyAsynchronousClients();
+		// Try it on tcp
+		useTcp = true;
+		doTestManyAsynchronousClients();
+	}
+
+	private void doTestManyAsynchronousClients() throws Exception {
 		// test many NonblockingResolvers using asynchronous sends
 		int numClients = 100;
 		int bad = 0;
-		singlePort = samePort;
+		NonblockingResolver resolver = new NonblockingResolver(SERVER);
+		// if (singlePort) {
+		resolver.setLocalAddress(new InetSocketAddress(LOCAL_PORT));
+		// }
+		resolver.setRemotePort(PORT);
+		resolver.setTimeout(TIMEOUT);
+		resolver.setSinglePort(singlePort);
 		for (int i = 0; i < numClients; i++) {
-			Thread task = new Thread() {
-				public void run() {
-					try {
-						NonblockingResolver resolver = new NonblockingResolver(
-								SERVER);
-						resolver.setPort(PORT);
-						resolver.setTimeout(TIMEOUT);
-						resolver.setSinglePort(singlePort);
-						Object id = new Integer(idCount++);
-						Message query = getQuery("example"
-								+ ((Integer) (id)).intValue() + ".net");
-						resolver.sendAsync(query, id, queue);
-					} catch (Exception e) {
-					}
-				}
-			};
-			task.start();
+			Object id = new Integer(idCount++);
+			Message query = getQuery("example" + ((Integer) (id)).intValue()
+					+ ".net");
+			resolver.sendAsync(query, id, queue);
 		}
 
-		int[] ports = new int[numClients]; 
+		int[] ports = new int[numClients];
 		for (int i = 0; i < numClients; i++) {
 			Response response = queue.getItem();
 			if (!response.isException()) {
-				// System.out.println("Result " + response.getId() + " received
-				// OK");
 				// Check response to see which port query went in on
 				int port = getPortFromResponse(response.getMessage());
 				ports[i] = port;
+//				System.out.println("Result " + response.getId()
+//						+ " received OK on port " + port);
 			} else {
-				// System.out.println("Result " + response.getId() + " threw
-				// Exception " + response.getException());
+//				System.out.println("Result " + response.getId()
+//						+ " threw Exception " + response.getException());
 			}
 			assertTrue(!response.isException()
 					|| response.getException() != null);
@@ -92,43 +101,48 @@ public class PortTest extends TestCase {
 				bad++;
 			}
 		}
-		if (samePort) {
+		if (singlePort) {
 			// Check same port has been used
 			int port0 = ports[0];
 			for (int i = 0; i < (numClients - bad); i++) {
-				assertTrue("Single port system used multiple ports!", ports[i] == port0);
+				assertTrue("Single port system used multiple ports!",
+						ports[i] == port0);
+				assertTrue("Correct port used (" + LOCAL_PORT + ")",
+						ports[i] == LOCAL_PORT);
 			}
-		}
-		else {
+		} else {
 			// @todo@ Check different port has been used
 			for (int i = 0; i < (numClients - bad); i++) {
 				int port = ports[i];
 				// Now go through remainder of array and check no port the same
-				for (int j = i; j < (numClients - bad); j++) {
-					assertTrue("Multi port system used same port (" + port + ")!", port != ports[j]);
+				for (int j = i + 1; j < (numClients - bad); j++) {
+					assertTrue("Multi port system used same port (" + port
+							+ ")!", port != ports[j]);
 				}
 			}
 		}
 		assertTrue("Too many exceptions! (" + bad + " of " + numClients + ")",
 				bad < (numClients * 0.05));
 	}
-	
-	private int getPortFromResponse(Message m) {
-        for (int i = 0; i < 4; i++) {
-            try { // Can do something with the counts field here, instead of cycling through all of these
-                Record[] records = m.getSectionArray(i);
-                if (records != null) {
-                    for (int j = 0; j < records.length; j++) {
-                        if ((records[j]).getClass().equals(TXTRecord.class)) {
-                            return Integer.valueOf(((String)(((TXTRecord)(records[j])).getStrings().get(0)))).intValue();
-                        }
-                    }
-                }
-            }
-            catch (IndexOutOfBoundsException e) {
-                // carry on!
-            }
-        }
+
+	public static int getPortFromResponse(Message m) {
+		for (int i = 0; i < 4; i++) {
+			try { // Can do something with the counts field here, instead of
+				// cycling through all of these
+				Record[] records = m.getSectionArray(i);
+				if (records != null) {
+					for (int j = 0; j < records.length; j++) {
+						if ((records[j]).getClass().equals(TXTRecord.class)) {
+							return Integer.valueOf(
+									((String) (((TXTRecord) (records[j]))
+											.getStrings().get(0)))).intValue();
+						}
+					}
+				}
+			} catch (IndexOutOfBoundsException e) {
+				// carry on!
+			}
+		}
 		return -999;
 	}
 

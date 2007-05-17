@@ -17,13 +17,11 @@
 */
 package uk.nominet.dnsjnio;
 
-import java.nio.channels.SocketChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.ByteChannel;
-import java.nio.ByteBuffer;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.io.IOException;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 
 /**
  * This class implements TCP-specific methods for
@@ -63,8 +61,9 @@ public class TCPConnection extends Connection {
         try {
             SocketChannel sch = SocketChannel.open();
             sch.configureBlocking(false);
+        	sch.socket().bind(localAddress);
             sk = sch.register(DnsController.getSelector(),0);
-            sch.connect(new InetSocketAddress(getHost(), getPort()));
+            sch.connect(remoteAddress);
             attach(sk);
         } catch(Exception e) {
             e.printStackTrace();

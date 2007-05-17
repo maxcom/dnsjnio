@@ -1,17 +1,23 @@
 package org.xbill.DNS;
 
-import uk.nominet.dnsjnio.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.List;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import uk.nominet.dnsjnio.QueryData;
+import uk.nominet.dnsjnio.Response;
+import uk.nominet.dnsjnio.ResponseQueue;
+import uk.nominet.dnsjnio.SinglePortTransactionController;
+import uk.nominet.dnsjnio.Transaction;
 
 /**
  * A nonblocking implementation of Resolver.
  * Multiple concurrent sendAsync queries can be run
  * without increasing the number of threads.
  * @todo AXFR?
- * @todo test ExtendedNonblockingResolver
 
 The contents of this file are subject to the Mozilla
 Public Licence Version 1.1 (the "Licence"); you may
@@ -34,8 +40,7 @@ public class NonblockingResolver implements INonblockingResolver {
     /** The default port to send queries to */
     public static final int DEFAULT_PORT = 53;
 
-    private InetAddress addr;
-    private int port = DEFAULT_PORT;
+    private InetSocketAddress remoteAddress = new InetSocketAddress(DEFAULT_PORT);
     private boolean useTCP = false, ignoreTruncation;
 //    private byte EDNSlevel = -1;
     private TSIG tsig;
@@ -57,7 +62,8 @@ public class NonblockingResolver implements INonblockingResolver {
     //
     private static short uniqueID = 0;
     private SinglePortTransactionController transactionController;
-    private boolean useSinglePort = true;
+    private boolean useSinglePort = false;
+    private InetSocketAddress localAddress = new InetSocketAddress(0); // use random port by default
 
     /**
      * Creates a SimpleResolver that will query the specified host
@@ -70,11 +76,14 @@ public class NonblockingResolver implements INonblockingResolver {
             if (hostname == null)
                 hostname = defaultResolver;
         }
+        InetAddress addr;
         if (hostname.equals("0"))
             addr = InetAddress.getLocalHost();
         else
             addr = InetAddress.getByName(hostname);
-        transactionController = new SinglePortTransactionController(getAddress());
+    	remoteAddress = new InetSocketAddress(addr, DEFAULT_PORT);
+    	// @todo@ Provide overloaded constructors to take local adress/port?
+        transactionController = new SinglePortTransactionController(remoteAddress, localAddress);
     }
 
     /**
@@ -89,8 +98,8 @@ public class NonblockingResolver implements INonblockingResolver {
     }
 
     InetSocketAddress
-            getAddress() {
-        return new InetSocketAddress(addr, port);
+            getRemoteAddress() {
+        return remoteAddress;
     }
 
     /** Sets the default host (initially localhost) to query */
@@ -99,10 +108,82 @@ public class NonblockingResolver implements INonblockingResolver {
         defaultResolver = hostname;
     }
 
+    /**
+     * Sets the address of the server to communicate with.
+     * @param remoteAddress The address of the DNS server
+     */
     public void
-            setPort(int port) {
-        this.port = port;
-        transactionController.setAddr(getAddress());
+    setRemoteAddress(InetSocketAddress addr) {
+    	remoteAddress = addr;
+        transactionController.setRemoteAddress(remoteAddress);
+    }
+
+    /**
+     * Sets the address of the server to communicate with (on the default
+     * DNS port)
+     * @param remoteAddress The address of the DNS server
+     */
+    public void
+    setRemoteAddress(InetAddress addr) {
+    	remoteAddress = new InetSocketAddress(addr, remoteAddress.getPort());
+        transactionController.setRemoteAddress(remoteAddress);
+    }
+
+    /**
+     * Sets the server port to communicate on.
+     * @param port The server DNS port
+     */
+    public void
+    setRemotePort(int port) {
+    	remoteAddress = new InetSocketAddress(remoteAddress.getAddress(), port);
+        transactionController.setRemoteAddress(remoteAddress);
+    }
+
+    /**
+     * Sets the local address to bind to when sending messages. If
+     * useSinglePort is false then random ports will be used.
+     * @param addr The local address to send messages from. 
+     */
+    public void
+    setLocalAddress(InetSocketAddress addr) {
+    	localAddress = addr;
+        transactionController.setLocalAddress(localAddress);
+    }
+
+    /**
+     * Sets the local address to bind to when sending messages.  A random port
+     * will be used.
+     * @param addr The local address to send messages from.
+     */
+    public void
+    setLocalAddress(InetAddress addr) {
+    	localAddress = new InetSocketAddress(addr, 0);
+        transactionController.setLocalAddress(localAddress);
+    }
+    
+    /**
+     * Sets the local port to bind to when sending messages.  A random port
+     * will be used if useSinglePort is false.
+     * @param port The local port to send messages from.
+     */
+    public void setLocalPort(int port) {
+    	localAddress = new InetSocketAddress(localAddress.getHostName(), port);
+        transactionController.setLocalAddress(localAddress);
+    }
+    
+    /**
+     * Sets the server DNS port
+     * @param port the server port 
+     */
+    public void setPort(int port) {
+    	setRemotePort(port);
+    }
+    
+    /**
+     * Get the address we're sending queries from
+     * @return the local address
+     */public InetSocketAddress getLocalAddress() {
+    	return localAddress;
     }
 
     public void
@@ -115,17 +196,22 @@ public class NonblockingResolver implements INonblockingResolver {
         this.ignoreTruncation = flag;
     }
     
+    /**
+     * Set single port mode on or off
+     * @param useSamePort should same port be used for all the queries?
+     */
     public void setSinglePort(boolean useSamePort) {
     	this.useSinglePort = useSamePort;
     }
+    
+    /**
+     * In single port mode?
+     * @return true if a single port should be used for all queries
+     */
+     public boolean isSinglePort() {
+    	return useSinglePort;
+    }
 
-//    public void
-//            setEDNS(int level) {
-//        if (level != 0 && level != -1)
-//            throw new UnsupportedOperationException("invalid EDNS level " +
-//                    "- must be 0 or -1");
-//        this.EDNSlevel = (byte) level;
-//    }
     public void
     setEDNS(int level, int payloadSize, int flags, List options) {
         if (level != 0 && level != -1)
@@ -147,14 +233,6 @@ public class NonblockingResolver implements INonblockingResolver {
             return;
         query.addRecord(queryOPT, Section.ADDITIONAL);
     }
-
-//    private void
-//            applyEDNS(Message query) {
-//        if (EDNSlevel < 0 || query.getOPT() != null)
-//            return;
-//        OPTRecord opt = new OPTRecord(EDNS_UDPSIZE, Rcode.NOERROR, (byte)0);
-//        query.addRecord(opt, Section.ADDITIONAL);
-//    }
 
     public void
             setTSIGKey(TSIG key) {
@@ -201,7 +279,7 @@ public class NonblockingResolver implements INonblockingResolver {
     }
 
     /**
-     * Sends a message to a single smtp and waits for a response.  No checking
+     * Sends a message to a single server and waits for a response.  No checking
      * is done to ensure that the response is associated with the query (other
      * than checking that the DNS packet IDs are equal)
      * @param query The query to send.
@@ -260,13 +338,12 @@ public class NonblockingResolver implements INonblockingResolver {
     }
 
     /**
-     * Asynchronously sends a message to a single smtp, registering a listener
-     * to receive a callback on success or exception.  Multiple asynchronous
-     * lookups can be performed in parallel.  Since the callback may be invoked
-     * before the function returns, external synchronization is necessary.
+     * Asynchronously sends a message to a single nameserver, registering a
+     *  ResponseQueue to buffer responses on success or exception.  Multiple 
+     *  asynchronous lookups can be performed in parallel.
      * @param query The query to send
      * @param responseQueue the queue for the responses
-     * @return An identifier, which is also a parameter in the callback
+     * @return An identifier, which is also a data member of the Response
      */
     public Object
             sendAsync(final Message query, final ResponseQueue responseQueue) {
@@ -302,13 +379,14 @@ public class NonblockingResolver implements INonblockingResolver {
         }
 
         if (Options.check("verbose"))
-            System.err.println("Sending to " + addr.getHostAddress() +
-                    ":" + port);
+            System.err.println("Sending to " + remoteAddress.getAddress() + ", from " 
+            		+ remoteAddress.getAddress());
 
         if (inQuery.getHeader().getOpcode() == Opcode.QUERY) {
             Record question = inQuery.getQuestion();
             if (question != null && question.getType() == Type.AXFR) {
-                //return sendAXFR(query); // @todo SORT OUT TRANSFER!!!
+            	throw new UnsupportedOperationException("AXFR not implemented in NonblockingResolver");
+//                return sendAXFR(query); // @TODO@ SORT OUT TRANSFER!
             }
         }
 
@@ -335,7 +413,7 @@ public class NonblockingResolver implements INonblockingResolver {
         // the response in to the client-supplied ResponseQueue.
 
         // Use SinglePortTransactionController if possible, otherwise get new Transaction.
-        if (transactionController.headerIdNotInUse(query.getHeader().getID())) {
+        if (useSinglePort && transactionController.headerIdNotInUse(query.getHeader().getID())) {
             QueryData qData = new QueryData();
             qData.setTcp(tcp);
             qData.setIgnoreTruncation(ignoreTruncation);
@@ -353,8 +431,10 @@ public class NonblockingResolver implements INonblockingResolver {
             }
         }
         else {
-            InetSocketAddress sa = new InetSocketAddress(addr, port);
-            Transaction transaction = new Transaction(sa, tsig, tcp, ignoreTruncation);
+//            InetSocketAddress sa = new InetSocketAddress(remoteAddress, port);
+        	// Use random port
+        	InetSocketAddress localAddr = new InetSocketAddress(localAddress.getAddress(), 0);
+            Transaction transaction = new Transaction(remoteAddress, localAddr, tsig, tcp, ignoreTruncation);
             if (!tcp) {
                 transaction.setUdpSize(udpSize);
             }
@@ -368,27 +448,26 @@ public class NonblockingResolver implements INonblockingResolver {
         }
     }
 
-    private Message
-            sendAXFR(Message query) throws IOException {
-        Name qname = query.getQuestion().getName();
-        SocketAddress sockaddr = new InetSocketAddress(addr, port);
-        ZoneTransferIn xfrin = ZoneTransferIn.newAXFR(qname, sockaddr, tsig);
-        try {
-            xfrin.run();
-        }
-        catch (ZoneTransferException e) {
-            throw new WireParseException(e.getMessage());
-        }
-        List records = xfrin.getAXFR();
-        Message response = new Message(query.getHeader().getID());
-        response.getHeader().setFlag(Flags.AA);
-        response.getHeader().setFlag(Flags.QR);
-        response.addRecord(query.getQuestion(), Section.QUESTION);
-        Iterator it = records.iterator();
-        while (it.hasNext())
-            response.addRecord((Record)it.next(), Section.ANSWER);
-        return response;
-    }
+//    private Message
+//            sendAXFR(Message query) throws IOException {
+//        Name qname = query.getQuestion().getName();
+//        ZoneTransferIn xfrin = ZoneTransferIn.newAXFR(qname, remoteAddress, tsig);
+//        try {
+//            xfrin.run();
+//        }
+//        catch (ZoneTransferException e) {
+//            throw new WireParseException(e.getMessage());
+//        }
+//        List records = xfrin.getAXFR();
+//        Message response = new Message(query.getHeader().getID());
+//        response.getHeader().setFlag(Flags.AA);
+//        response.getHeader().setFlag(Flags.QR);
+//        response.addRecord(query.getQuestion(), Section.QUESTION);
+//        Iterator it = records.iterator();
+//        while (it.hasNext())
+//            response.addRecord((Record)it.next(), Section.ANSWER);
+//        return response;
+//    }
 
     public static Message
             parseMessage(byte [] b) throws WireParseException {

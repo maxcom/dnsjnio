@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Random;
 
@@ -70,7 +72,8 @@ public class UdpResponder extends Thread {
         }
 
         InetAddress client = packet.getAddress();
-        int client_port = packet.getPort();
+        InetSocketAddress sa = (InetSocketAddress)(packet.getSocketAddress());
+        int client_port = sa.getPort();
         byte[] bytes = packet.getData();
 
         if (bytes != null) {
@@ -78,7 +81,7 @@ public class UdpResponder extends Thread {
                 Message query = new Message(bytes);
 //                    printMsg(query.toString());
 
-                Message response = server.formResponse(query, socket.getPort());
+                Message response = server.formResponse(query, client_port);
                 if (response != null) {
 
                     try {

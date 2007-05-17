@@ -151,8 +151,8 @@ public class ServerTest extends TestCase {
 	private void doTestManyAsynchronousRequests(NonblockingResolver resolver,
 			boolean useSameHeaderId) throws Exception {
 		int numRequests = 500;
-		// String name = "example.net";
-		String name = RemoteServerTest.REAL_QUERY_NAME;
+		String name = "example.net";
+//		String name = RemoteServerTest.REAL_QUERY_NAME;
 		resolver.setTimeout(TIMEOUT);
 		int startId = idCount;
 		int bad = 0;
@@ -216,6 +216,8 @@ public class ServerTest extends TestCase {
 			if (!response.isException()) {
 				// System.out.println("Result " + response.getId() + " received
 				// OK");
+//				int port = PortTest.getPortFromResponse(response.getMessage());
+//				System.out.println("Response received from port " + port);
 			} else {
 				// System.out.println("Result " + response.getId() + " threw
 				// Exception " + response.getException());

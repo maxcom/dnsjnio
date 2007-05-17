@@ -1,11 +1,48 @@
-The basic idea of dnsjnio is to plug in a non-blocking
-Resolver implementation to dnsjava.
+The basic idea of dnsjnio is to plug in a non-blocking Resolver 
+implementation to dnsjava. An asynchronous implementation of 
+ExtendedResolver has also been added; this handles querying multiple 
+resolvers in accordance with RFC1035 section 4.2.1.
 
-The org.xbill.DNS.INonblockingResolver extends the dnsjava
-Resolver implementation to define an alternative to the
-callback mechanism (which is still supported but not
-recommended as an extra thread is required and there is
-a slight race hazard implicit in the interface).
 
-Queries are made in the client thread. The NonblockingResolver
-implementation 
+NonBlockingResolver
+===================
+
+The org.xbill.DNS.INonblockingResolver extends the dnsjava Resolver 
+implementation to define an alternative to the ResolverListener 
+callback mechanism (which is still supported but not recommended). 
+A ResponseQueue is used to buffer Responses from the I/O thread to the
+client. The client can either block on the queue or else poll the queue
+for new Responses.
+
+The DnsController controls the java.nio non-blocking I/O package and is
+the heart of dnsjnio. It creates a new thread named "DnsSelect" which 
+runs in a continuous loop. Each loop, the input queue is checked for 
+new tasks. These tasks are then run in the DnsSelect thread and consist 
+of calls such as connect(), send() and close(). Once the input queue is
+empty the DnsSelect thread makes a blocking call to select(), before 
+processing the result. The loop then starts again.
+
+The rest of the dnsjnio code runs in the client thread (unless using the
+ResolverListener callback interface which must start a new thread for 
+each callback). Connections are handled by instances of 
+AbstractTransactionControllers - if communication over a single port is
+required then a SinglePortTransactionController is used - otherwise a 
+Transaction per query is instantiated by the NonblockingResolver.
+
+A "DnsTimer" thread is also run to handle the timeouts for DNS requests.
+
+ExtendedNonblockingResolver
+===========================
+
+The ExtendedNonblockingResolver handles querying multiple resolvers
+for the same name. UDP transport is assumed but TCP may also be used.
+The first nameserver in the list is queried first - if this query times
+out then the next nameserver is tried and so on. Retries will also be
+made to the previous nameserver if the retry limit has not been
+exceeded. No exponential backoff strategy is implemented, nor is any
+attempt made to track behaviour of the nameservers.
+
+Use of the ExtendedNonblockingResolver creates one additional thread.
+The "EnbrResolutionThread" handles querying the NonblockingResolvers
+and communicates with the client thread by an input queue and an output
+queue.

@@ -1,11 +1,15 @@
 package org.xbill.DNS;
 
-import uk.nominet.dnsjnio.*;
-
+import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.io.*;
+import uk.nominet.dnsjnio.Response;
+import uk.nominet.dnsjnio.ResponseQueue;
 
 /**
  * The contents of this file are subject to the Mozilla Public Licence Version
@@ -19,38 +23,6 @@ import java.io.*;
  * (c) Nominet UK 2006. All rights reserved.
  */
 public class ExtendedNonblockingResolver {
-	// private class RequestQueue extends ResponseQueue {
-	// /**
-	// * This method is called internally to add a new QueryRequest to the
-	// * queue.
-	// *
-	// * @param request
-	// * the new QueryRequest
-	// */
-	// public synchronized void insert(QueryRequest request) {
-	// list.addLast(request);
-	// notifyAll();
-	// }
-	//
-	// public synchronized Response getItem() {
-	// throw new RuntimeException("Not implemented!"); // @todo Fix this
-	// rubbish!
-	// }
-	//
-	// public synchronized QueryRequest getRequest() {
-	// while (isEmpty()) {
-	// try {
-	// waitingThreads++;
-	// wait();
-	// } catch (InterruptedException e) {
-	// Thread.interrupted();
-	// }
-	// waitingThreads--;
-	// }
-	// return (QueryRequest) (list.removeFirst());
-	// }
-	// }
-
 	private class QueryRequest {
 		protected ResponseQueue responseQueue;
 
@@ -81,6 +53,7 @@ public class ExtendedNonblockingResolver {
 		ExtendedNonblockingResolver eres;
 
 		public ResolutionThread(ExtendedNonblockingResolver eres) {
+			setName("EnbrResolutionThread");
 			List l = eres.resolvers;
 			resolvers = (NonblockingResolver[]) l
 					.toArray(new NonblockingResolver[l.size()]);
@@ -118,7 +91,7 @@ public class ExtendedNonblockingResolver {
 			// currently in use?
 			// Send a query on the next resolver
 			QueryRequest request = new QueryRequest(responseQueue, id, query);
-			String name = request.query.getQuestion().getName().toString();
+//			String name = request.query.getQuestion().getName().toString();
 //			System.out.println("Sending first request for " + name
 //					+ " to new resolver " + request.currentIndex);
 			sendQueryToNextResolver(request);

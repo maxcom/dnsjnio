@@ -17,13 +17,10 @@
 */
 package uk.nominet.dnsjnio;
 
-import org.xbill.DNS.Message;
-import org.xbill.DNS.Header;
-import org.xbill.DNS.NonblockingResolver;
-import org.xbill.DNS.ResolverListener;
-
-import java.io.IOException;
 import java.net.SocketTimeoutException;
+
+import org.xbill.DNS.Message;
+import org.xbill.DNS.ResolverListener;
 
 /**
  * Abstract superclass for the Transaction and SinglePortTransaction classes
@@ -41,7 +38,7 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
         return 0;
     }
 
-    protected static void sendQuery(Connection connection, Message query) {
+  protected static void sendQuery(Connection connection, Message query) {
         if (connection != null) {
             byte [] out = query.toWire(Message.MAXLENGTH);
             connection.send(out);
@@ -69,7 +66,7 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
         }
         else {
             // Send the result back to the listener
-            // @todo Should probably have a pool of these threads.
+            // @todo@ Should probably have a pool of these threads.
             ResponderThread responder = new ResponderThread(listener, id, message);
             responder.start();
         }
@@ -86,6 +83,7 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
         }
         else {
             // Send the exception back to the listener
+            // @todo@ Should probably have a pool of these threads.
             ResponderThread responder = new ResponderThread(listener, id, e);
             responder.start();
         }

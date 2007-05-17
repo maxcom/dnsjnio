@@ -49,7 +49,7 @@ public class ExtendedResolverTest extends TestCase {
 		// Start up a load of resolvers on localhost (running on different
 		// ports)
 		stopServers();
-		System.out.println("Starting servers");
+//		System.out.println("Starting servers");
 		servers = new TestServer[numServers];
 		resolvers = new NonblockingResolver[NUM_SERVERS];
 		for (int i = 0; i < numServers; i++) {
@@ -64,7 +64,7 @@ public class ExtendedResolverTest extends TestCase {
 	}
 
 	private void stopServers() {
-		System.out.println("Stopping servers");
+//		System.out.println("Stopping servers");
 		if (servers != null) {
 			for (int i = 0; i < servers.length; i++) {
 				servers[i].stopRunning();
@@ -85,7 +85,7 @@ public class ExtendedResolverTest extends TestCase {
 		runSomeGoodTest();
 		// d) Now try a synchronous test
 		runSynchronousTest();
-		stopServers();
+//		stopServers();
 	}
 
 	public void runAllGoodTest() throws Exception {
@@ -118,7 +118,7 @@ public class ExtendedResolverTest extends TestCase {
 		Name name = Name.fromString("example.net", Name.root);
 		Record question = Record.newRecord(name, Type.A, DClass.ANY);
 		Message query = Message.newQuery(question);
-		Message response = eres.send(query);
+		eres.send(query);
 
 		// And try getting a timeout
 		name = Name.fromString("timeout.example.net", Name.root);
@@ -148,21 +148,21 @@ public class ExtendedResolverTest extends TestCase {
 			int headerId = headerIdCount;
 			headerId = headerIdCount++;
 			query.getHeader().setID(headerId);
-			System.out.println("Sending Query " + headerId);
+//			System.out.println("Sending Query " + headerId);
 			eres.sendAsync(query, queue);
 		}
 		for (int i = 0; i < NUM_REQUESTS; i++) {
-			System.out.println("Waiting on next item");
+//			System.out.println("Waiting on next item");
 			Response response;
 			synchronized (queue) {
 				response = queue.getItem();
 			}
 			if (!response.isException()) {
-				System.out.println(i + ", Result " + response.getId()
-						+ " received OK");
+//				System.out.println(i + ", Result " + response.getId()
+//						+ " received OK");
 			} else {
-				System.out.println(i + ", Result " + response.getId()
-						+ "threw Exception " + response.getException());
+//				System.out.println(i + ", Result " + response.getId()
+//						+ "threw Exception " + response.getException());
 			}
 			assertTrue(!response.isException()
 					|| response.getException() != null);

@@ -17,12 +17,12 @@
 */
 package uk.nominet.dnsjnio;
 
-import org.xbill.DNS.Message;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 
-import java.io.*;
-import java.net.*;
-import java.nio.*;
-import java.nio.channels.*;
+import org.xbill.DNS.Message;
 
 /**
  * This class implements the UDP specific methods for the
@@ -38,9 +38,9 @@ public class UDPConnection extends Connection {
         try {
             DatagramChannel sch = DatagramChannel.open();
             sch.configureBlocking(false);
-            InetSocketAddress remote = new InetSocketAddress(getHost(), getPort());
+        	sch.socket().bind(localAddress);
             sk = sch.register(DnsController.getSelector(),0);
-            sch.connect(remote);
+            sch.connect(remoteAddress);
             attach(sk);
         } catch(Exception e) {
             e.printStackTrace();

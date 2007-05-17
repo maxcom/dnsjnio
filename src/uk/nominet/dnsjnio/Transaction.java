@@ -17,10 +17,14 @@
 */
 package uk.nominet.dnsjnio;
 
-import org.xbill.DNS.*;
-
-import java.net.InetSocketAddress;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+
+import org.xbill.DNS.Flags;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.NonblockingResolver;
+import org.xbill.DNS.ResolverListener;
+import org.xbill.DNS.TSIG;
 
 /**
  * This class models a DNS query transaction. It contains methods
@@ -41,7 +45,8 @@ public class Transaction extends AbstractTransaction {
     TSIG tsig;
     boolean tcp;
     boolean ignoreTruncation;
-    protected InetSocketAddress addr;
+    protected InetSocketAddress remoteAddr;
+    protected InetSocketAddress localAddr;
     private long endTime;
     private ResponseQueue responseQueue;
     private ResolverListener listener = null;
@@ -49,16 +54,17 @@ public class Transaction extends AbstractTransaction {
 
     /**
      * Transaction constructor
-     * @param addr The resolver to query
+     * @param remoteAddress The resolver to query
      * @param tsig The TSIG for the query
      * @param tcp use TCP if true, UDP otherwise
      * @param ignoreTruncation true if truncated responses are ok
      */
-    public Transaction(InetSocketAddress addr, TSIG tsig, boolean tcp, boolean ignoreTruncation) {
+    public Transaction(InetSocketAddress remoteAddr, InetSocketAddress localAddr, TSIG tsig, boolean tcp, boolean ignoreTruncation) {
         this.tcp = tcp;
         this.ignoreTruncation = ignoreTruncation;
         this.tsig = tsig;
-        this.addr = addr;
+        this.remoteAddr = remoteAddr;
+        this.localAddr = localAddr;
     }
 
     /**
@@ -110,7 +116,7 @@ public class Transaction extends AbstractTransaction {
         else {
             connection = new UDPConnection(this, udpSize);
         }
-        connection.connect(addr);
+        connection.connect(remoteAddr, localAddr);
     }
 
     /**

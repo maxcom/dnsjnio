@@ -17,11 +17,16 @@
 */
 package uk.nominet.dnsjnio;
 
-import org.xbill.DNS.*;
-
 import java.io.IOException;
-import java.util.*;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.xbill.DNS.Flags;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.NonblockingResolver;
+import org.xbill.DNS.ResolverListener;
 
 /**
  * This class provides communication over a single port.
@@ -38,10 +43,8 @@ public class SinglePortTransactionController extends AbstractTransaction {
     private Map udpQueryDataMap = new HashMap();
     private TCPConnection tcpConnection;
     private UDPConnection udpConnection;
-    protected final static int SINGLE_PORT_BASE = 6152; // @todo!! Sort out dynamic port selection
-    protected static int currentPort = SINGLE_PORT_BASE;
-    protected int port;
-    protected InetSocketAddress addr;
+    protected InetSocketAddress remoteAddress;
+    protected InetSocketAddress localAddress;
 
     public boolean headerIdNotInUse(int id) {
         // Search the queryDataList for this ID.
@@ -125,7 +128,7 @@ public class SinglePortTransactionController extends AbstractTransaction {
                 getNewUdpConnection(qData);
             }
         }
-        qData.getConnection().connect(addr);
+        qData.getConnection().connect(remoteAddress, localAddress);
     }
 
     private void getNewTcpConnection(QueryData qData) {
@@ -134,27 +137,27 @@ public class SinglePortTransactionController extends AbstractTransaction {
     }
 
     private void getNewUdpConnection(QueryData qData) {
-        udpConnection = new SinglePortUDPConnection(this, port);
+        udpConnection = new SinglePortUDPConnection(this, localAddress.getPort());
         qData.setConnection(udpConnection);
     }
 
-    public void setAddr(InetSocketAddress addr) {
-        this.addr = addr;
+    public void setRemoteAddress(InetSocketAddress addr) {
+        this.remoteAddress = addr;
     }
 
-    public SinglePortTransactionController(InetSocketAddress addr) {
-        this.addr = addr;
-        port = currentPort++;
+    public void setLocalAddress(InetSocketAddress addr) {
+        this.localAddress = addr;
+    }
+
+    public SinglePortTransactionController(InetSocketAddress remoteAddr, InetSocketAddress localAddr) {
+        this.remoteAddress = remoteAddr;
+        this.localAddress = localAddr;
         synchronized (tcpQueryDataMap) {
             tcpQueryDataMap = new HashMap();
         }
         synchronized (udpQueryDataMap) {
             udpQueryDataMap = new HashMap();
         }
-    }
-
-    public int getPort() {
-        return port;
     }
 
     /**
@@ -264,7 +267,7 @@ public class SinglePortTransactionController extends AbstractTransaction {
         }
         if (reconnect) {
             // reconnect - the queue will be sent then.
-            connection.connect(addr);
+            connection.connect(remoteAddress, localAddress);
         }
     }
 

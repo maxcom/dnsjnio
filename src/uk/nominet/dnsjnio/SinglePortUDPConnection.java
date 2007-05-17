@@ -18,26 +18,23 @@
 package uk.nominet.dnsjnio;
 
 import java.nio.channels.DatagramChannel;
-import java.net.InetSocketAddress;
 
 /**
  * Single port UDP connection.
  * This class reuses the same port.
  */
 public class SinglePortUDPConnection extends UDPConnection {
-    private int port;
     public SinglePortUDPConnection(ConnectionListener listener, int port) {
         super(listener, SINGLE_PORT_BUFFER_SIZE);
-        this.port = port;
     }
     protected void connect() {
         try {
             DatagramChannel sch = DatagramChannel.open();
             sch.configureBlocking(false);
             sch.socket().setReuseAddress(true);
-            InetSocketAddress remote = new InetSocketAddress(getHost(), getPort());
+        	sch.socket().bind(localAddress);
             sk = sch.register(DnsController.getSelector(),0);
-            sch.connect(remote);
+            sch.connect(remoteAddress);
             attach(sk);
         } catch(Exception e) {
             e.printStackTrace();
