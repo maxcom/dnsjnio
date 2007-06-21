@@ -84,7 +84,8 @@ public class ListenerTest extends TestCase {
         // Start a query which will never end
         // wait for the required timeout period
         NonblockingResolver resolver = new NonblockingResolver("localhost");
-        resolver.setTimeout(TIMEOUT);
+        int timeout = 1;
+        resolver.setTimeout(timeout);
         resolver.setPort(PORT);
         Message query = getQuery("timeout.example.net");
         Integer id = new Integer(idCount++);
@@ -108,8 +109,8 @@ public class ListenerTest extends TestCase {
             fail("Exception " + result.x + " thrown instead of SocketTimeoutException!");
         }
         long totalTime = endTime - startTime;
-        assertTrue("Timeout too short! " + totalTime, totalTime > TIMEOUT * 900);
-        assertTrue("Timeout too long! " + totalTime, totalTime < TIMEOUT * 1100);
+        assertTrue("Timeout too short! " + totalTime, totalTime > timeout * 900);
+        assertTrue("Timeout too long! " + totalTime, totalTime < timeout * 1100);
     }
 
     public void testManySequentialAsynchronousRequests() throws Exception {
@@ -230,17 +231,18 @@ public class ListenerTest extends TestCase {
         assertTrue("Too many exceptions! (" + bad + " of " + numRequests + ")", bad < (numRequests * 0.05));
     }
 
-    public void testManySequentialAsynchronousRequestsTCP() throws Exception {
-        NonblockingResolver resolver = new NonblockingResolver(SERVER);
-        resolver.setTCP(true);
-        doTestManySequentialAsynchronousRequests(resolver);
-    }
+//    public void testManySequentialAsynchronousRequestsTCP() throws Exception {
+//        NonblockingResolver resolver = new NonblockingResolver(SERVER);
+//        resolver.setTCP(true);
+//        doTestManySequentialAsynchronousRequests(resolver);
+//    }
 
     public void testManyAsynchronousRequestsTCP() throws Exception {
         // Our blocking test server is unhappy about handling 500 concurrent requests...
-        NonblockingResolver resolver = new NonblockingResolver(RemoteServerTest.REAL_SERVER);
+//        NonblockingResolver resolver = new NonblockingResolver(RemoteServerTest.REAL_SERVER);
+        NonblockingResolver resolver = new NonblockingResolver(SERVER);
         resolver.setTCP(true);
-        doTestManyAsynchronousRequests(resolver, 500, 53);
+        doTestManyAsynchronousRequests(resolver, 50, PORT); // 53);
     }
 
     private Message getQuery(String nameString) throws TextParseException {

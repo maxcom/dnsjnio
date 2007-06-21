@@ -33,7 +33,7 @@ public class TestServer extends Thread {
     ServerSocket tcpSocket;
     DatagramSocket udpSocket;
     final static int NUM_UDP_THREADS = 600;
-    final static int NUM_TCP_THREADS = 2;
+    final static int NUM_TCP_THREADS = 50;
     UdpResponder[] udpServers; // = new UdpResponder[NUM_UDP_THREADS];
     TcpResponder[] tcpServers; // = new TcpResponder[NUM_TCP_THREADS];
     Random random = new Random();

@@ -111,7 +111,7 @@ public class ExtendedNonblockingResolver {
 				request.responseQueue.insert(response);
 			} else {
 				// No longer have the request so must have responded. Ignore it.
-				System.out.println("ERROR - ProcessResponse ignoring good response due to no known request");
+				System.err.println("DNSJNIO ExtendedNonblockingResolver ERROR - ProcessResponse ignoring good response due to no known request");
 			}
 		}
 
@@ -277,7 +277,7 @@ public class ExtendedNonblockingResolver {
 		String[] servers = ResolverConfig.getCurrentConfig().servers();
 		if (servers != null) {
 			for (int i = 0; i < servers.length; i++) {
-				Resolver r = new NonblockingResolver(servers[i]);
+				NonblockingResolver r = new NonblockingResolver(servers[i]);
 				r.setTimeout(quantum);
 				resolvers.add(r);
 			}
@@ -300,14 +300,14 @@ public class ExtendedNonblockingResolver {
 	 * @exception UnknownHostException
 	 *                Failure occured initializing NonblockingResolvers
 	 */
-	public static ExtendedNonblockingResolver newInstance(Resolver[] res) throws UnknownHostException {
+	public static ExtendedNonblockingResolver newInstance(NonblockingResolver[] res) throws UnknownHostException {
 		// Don't allow the this reference to escape during construction
 		// (a thread is created and started in the constructor)
 		ExtendedNonblockingResolver enbr = new ExtendedNonblockingResolver(res);
 		return enbr;		
 	}
 	
-	private ExtendedNonblockingResolver(Resolver[] res)
+	private ExtendedNonblockingResolver(NonblockingResolver[] res)
 			throws UnknownHostException {
 		resolvers = new ArrayList();
 		for (int i = 0; i < res.length; i++)
@@ -360,24 +360,24 @@ public class ExtendedNonblockingResolver {
 	}
 
 	/** Returns the nth resolver used by this ExtendedResolver */
-	public Resolver getResolver(int n) {
+	public NonblockingResolver getResolver(int n) {
 		if (n < resolvers.size())
-			return (Resolver) resolvers.get(n);
+			return (NonblockingResolver) resolvers.get(n);
 		return null;
 	}
 
 	/** Returns all resolvers used by this ExtendedResolver */
-	public Resolver[] getResolvers() {
-		return (Resolver[]) resolvers.toArray(new Resolver[resolvers.size()]);
+	public NonblockingResolver[] getResolvers() {
+		return (NonblockingResolver[]) resolvers.toArray(new NonblockingResolver[resolvers.size()]);
 	}
 
 	/** Adds a new resolver to be used by this ExtendedResolver */
-	public void addResolver(Resolver r) {
+	public void addResolver(NonblockingResolver r) {
 		resolvers.add(r);
 	}
 
 	/** Deletes a resolver used by this ExtendedResolver */
-	public void deleteResolver(Resolver r) {
+	public void deleteResolver(NonblockingResolver r) {
 		resolvers.remove(r);
 	}
 

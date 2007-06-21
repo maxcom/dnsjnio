@@ -45,11 +45,10 @@ public class ServerTest extends TestCase {
 
 	TestServer server = TestServer.startServer();
 
-	 public void setUp() {
-	 reset();
-//	 TestServer.startServer();
-	 }
-	
+	public void setUp() {
+		reset();
+		// TestServer.startServer();
+	}
 
 	public void finalize() {
 		server.stopRunning();
@@ -151,8 +150,11 @@ public class ServerTest extends TestCase {
 	private void doTestManyAsynchronousRequests(NonblockingResolver resolver,
 			boolean useSameHeaderId) throws Exception {
 		int numRequests = 500;
+		if (resolver.isTCP()) {
+			numRequests = 50;
+		}
 		String name = "example.net";
-//		String name = RemoteServerTest.REAL_QUERY_NAME;
+		// String name = RemoteServerTest.REAL_QUERY_NAME;
 		resolver.setTimeout(TIMEOUT);
 		int startId = idCount;
 		int bad = 0;
@@ -216,8 +218,9 @@ public class ServerTest extends TestCase {
 			if (!response.isException()) {
 				// System.out.println("Result " + response.getId() + " received
 				// OK");
-//				int port = PortTest.getPortFromResponse(response.getMessage());
-//				System.out.println("Response received from port " + port);
+				// int port =
+				// PortTest.getPortFromResponse(response.getMessage());
+				// System.out.println("Response received from port " + port);
 			} else {
 				// System.out.println("Result " + response.getId() + " threw
 				// Exception " + response.getException());
@@ -310,7 +313,7 @@ public class ServerTest extends TestCase {
 		long endTime = System.currentTimeMillis();
 		long time = startTime - endTime;
 		assertTrue(time < 100); // Check that query timeout of 1 was used, not
-								// resolver timeout of 100
+		// resolver timeout of 100
 		if (!result.isException()) {
 			fail("Response recevied for impossible query!");
 		}
@@ -345,10 +348,9 @@ public class ServerTest extends TestCase {
 	public void testManyAsynchronousRequestsTCP() throws Exception {
 		// Our blocking test server is unhappy about handling 500 concurrent
 		// requests...
-		NonblockingResolver resolver = new NonblockingResolver(
-				RemoteServerTest.REAL_SERVER);
+		NonblockingResolver resolver = new NonblockingResolver(SERVER);
 		resolver.setTCP(true);
-		resolver.setPort(53);
+		resolver.setPort(PORT);
 		doTestManyAsynchronousRequests(resolver);
 	}
 
