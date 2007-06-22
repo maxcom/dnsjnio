@@ -1,0 +1,13 @@
+Release notes for dnsjnio version 0.9.7
+---------------------------------------
+
+o  Added LookupAsynch (thanks Stefano Bagnara!) and LookupAsynchTest.
+o  Working version of ExtendedNonblockingResolver (and test code) added.
+o  Added non-single-port usage of dnsjnio. Instead of always running on
+    the same port (when possible), dnsjnio can now be configured to run 
+    a new port for every query (to help prevent spoofing).
+o  Header ID (uniqueId) now short as ID is only 16 bits - thanks 
+     Norman Maurer!
+o  Threads now call setDaemon(true) - thanks Stefano Bagnara!
+
+
