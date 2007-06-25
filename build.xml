@@ -4,8 +4,9 @@
 
     <property file="build.properties"/>
 
-    <!-- Override compiler to be javac -->
-    <property name="build.compiler" value="modern" />
+    <!-- Override compiler to be  -->
+    <property name="target" value="1.4" />
+    <property name="source" value="${target}" />
 
     <property name="build.dir" value="build/classes"/>
     <property name="dist.dir" value="dist"/>
@@ -31,14 +32,18 @@
     <!-- Nominet targets -->
     <target name="compile" depends="make.dirs, compile.src, compile.demo"/>
     <target name="compile.src">
-        <javac srcdir="${src.dir}/"
+        <javac target="${target}"
+        	   source="${source}"
+    	       srcdir="${src.dir}/"
                destdir="${build.dir}"
                deprecation="true"
                classpathref="dnsjnio.classpath"
                includes="uk/nominet/ org/xbill/DNS/" />
     </target>
     <target name="compile.demo">
-        <javac srcdir="${demo.dir}/"
+        <javac target="${target}"
+         	   source="${source}"
+        	   srcdir="${demo.dir}/"
                destdir="${build.dir}"
                deprecation="true"
                classpathref="dnsjnio.classpath"/>
@@ -51,7 +56,9 @@
     </target>
 
     <target name="compile.test" depends = "jar">
-        <javac srcdir="${test.dir}/"
+        <javac target="${target}"
+        	   source="${source}"
+        	   srcdir="${test.dir}/"
                destdir="${build.dir}"
                deprecation="true"
                classpathref="dnsjnio.classpath"
