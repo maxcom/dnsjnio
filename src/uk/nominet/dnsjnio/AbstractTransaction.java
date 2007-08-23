@@ -28,7 +28,7 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
     protected void disconnect(Connection connection) {
         if (connection != null) {
             connection.disconnect();
-            connectiob.removeListener(this);
+            connection.removeListener(this);
             connection = null;
         }
     }
