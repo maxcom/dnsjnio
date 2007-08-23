@@ -1,15 +1,20 @@
 /*
- The contents of this file are subject to the Mozilla
- Public Licence Version 1.1 (the "Licence"); you may
- not use this file except in compliance with the
- Licence. You may obtain a copy of the Licence at
- http://www.mozilla.org/MPL
- Software distributed under the Licence is distributed
- on an "AS IS" basis,  WITHOUT WARRANTY OF ANY KIND,
- either express or implied. See the Licence of the
- specific language governing rights and limitations
- under the Licence.
+/*
+Copyright 2007 Nominet UK
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License.
  */
+
 
 // Copyright (c) 2002-2004 Brian Wellington (bwelling@xbill.org)
 package org.xbill.DNS;
@@ -31,7 +36,7 @@ import java.util.Map;
  * The Lookup object issues queries to caching DNS servers. The input consists
  * of a name, an optional type, and an optional class. Caching is enabled by
  * default and used when possible to reduce the number of DNS requests. A
- * Resolver, which defaults to an ExtendedResolver initialized with the
+ * Resolver, which defaults to an ExtendedNonblockingResolver initialized with the
  * resolvers located by the ResolverConfig class, performs the queries. A search
  * path of domain suffixes is used to resolve relative names, and is also
  * determined by the ResolverConfig class.

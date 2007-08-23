@@ -1,20 +1,19 @@
 /*
- The contents of this file are subject to the Mozilla
- Public Licence Version 1.1 (the "Licence"); you may
- not use this file except in compliance with the
- Licence. You may obtain a copy of the Licence at
- http://www.mozilla.org/MPL
- Software distributed under the Licence is distributed
- on an "AS IS" basis,  WITHOUT WARRANTY OF ANY KIND,
- either express or implied. See the Licence of the
- specific language governing rights and limitations
- under the Licence.
- The Original Code is dnsjnio.
- The Initial Developer of the Original Code is
- Nominet UK (www.nominet.org.uk). Portions created by
- Nominet UK are Copyright (c) Nominet UK 2006.
- All rights reserved.
-*/
+Copyright 2007 Nominet UK
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License.
+ */
+
 package uk.nominet.dnsjnio;
 
 import junit.framework.TestCase;
@@ -42,6 +41,7 @@ public class RetTest extends TestCase {
     final static int TIMEOUT = 10;
     public static int threadIdCount = 0;
     final static Random random = new Random();
+    Object lock = new Object();
     public RetTest(String arg0) {
         super(arg0);
         TestServer.startServer();
@@ -97,7 +97,7 @@ public class RetTest extends TestCase {
         public int numBad = 0;
         int threadId;
         Object lock = new Object();
-        List ids = Collections.synchronizedList(new LinkedList());
+        List ids = new LinkedList();
 
         public ResolverWrap() {
             threadId = threadIdCount++;
@@ -136,10 +136,12 @@ public class RetTest extends TestCase {
                     query.addRecord(opt, Section.ADDITIONAL);
                 query.getHeader().setFlag(Flags.RD);
 //                System.out.println("Querying " + threadId + " for " + name);
-                Object id = resolver.sendAsync(query, this);
-                ids.add(id);
-                queriesInProgress++;
-                numSent++;
+                synchronized (lock) {
+                    Object id = resolver.sendAsync(query, this);
+                    ids.add(id);
+                    queriesInProgress++;
+                    numSent++;
+                }
             }
         }
 
@@ -179,8 +181,10 @@ public class RetTest extends TestCase {
         }
 
         private void checkId(Object id) {
-            assertTrue("Bad id!", ids.contains(id));
-            ids.remove(id);
+        	synchronized (lock) {
+                assertTrue("Bad id!", ids.contains(id));
+                ids.remove(id);
+        	}
         }
     }
 }

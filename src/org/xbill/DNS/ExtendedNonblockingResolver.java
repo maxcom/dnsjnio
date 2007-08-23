@@ -12,17 +12,21 @@ import uk.nominet.dnsjnio.Response;
 import uk.nominet.dnsjnio.ResponseQueue;
 
 /**
- * The contents of this file are subject to the Mozilla Public Licence Version
- * 1.1 (the "Licence"); you may not use this file except in compliance with the
- * Licence. You may obtain a copy of the Licence at http://www.mozilla.org/MPL
- * Software distributed under the Licence is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the Licence of
- * the specific language governing rights and limitations under the Licence. The
- * Original Code is dnsjnio. The Initial Developer of the Original Code is
- * Nominet UK (www.nominet.org.uk). Portions created by Nominet UK are Copyright
- * (c) Nominet UK 2006. All rights reserved.
+Copyright 2007 Nominet UK
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License.
  */
-public class ExtendedNonblockingResolver {
+public class ExtendedNonblockingResolver implements Resolver {
 	private class QueryRequest {
 		protected ResponseQueue responseQueue;
 
@@ -255,6 +259,54 @@ public class ExtendedNonblockingResolver {
 
 	private ResolutionThread resolutionThread;
 
+	public void
+	setPort(int port) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setPort(port);
+	}
+
+	public void
+	setTCP(boolean flag) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setTCP(flag);
+	}
+
+	public void
+	setIgnoreTruncation(boolean flag) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setIgnoreTruncation(flag);
+	}
+
+	public void
+	setEDNS(int level) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setEDNS(level);
+	}
+
+	public void
+	setEDNS(int level, int payloadSize, int flags, List options) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setEDNS(level, payloadSize,
+							     flags, options);
+	}
+
+	public void
+	setTSIGKey(TSIG key) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setTSIGKey(key);
+	}
+
+	public void
+	setTimeout(int secs, int msecs) {
+		for (int i = 0; i < resolvers.size(); i++)
+			((Resolver)resolvers.get(i)).setTimeout(secs, msecs);
+	}
+
+	public void
+	setTimeout(int secs) {
+		setTimeout(secs, 0);
+	}
+
 	/**
 	 * Creates a new Extended Resolver. The default ResolverConfig is used to
 	 * determine the servers for which NonblockingResolver contexts should be
@@ -357,6 +409,10 @@ public class ExtendedNonblockingResolver {
 	public void sendAsync(final Message query, final Object id,
 			final ResponseQueue responseQueue) {
 		resolutionThread.startNewRequest(query, id, responseQueue);
+	}
+	
+	public Object sendAsync(final Message query, final ResolverListener listener) {
+		throw new RuntimeException("Listener callback not implemented - use ResponseQueue instead!");
 	}
 
 	/** Returns the nth resolver used by this ExtendedResolver */
