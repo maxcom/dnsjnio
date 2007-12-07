@@ -62,15 +62,21 @@ public final class LookupAsynch {
                     response = responseQueue.getItem();
                     pendingLookup = (LookupAsynch) pendingLookups.remove(response.getId());
                 }
-                LookupContinuation lc = pendingLookup.processResponse(response);
-                synchronized (pendingLookup) {
-                    if (lc == null) {
-                        pendingLookup.completeLookup();
-                        pendingLookup.notify();
-                    } else {
-                        pendingLookup.submitQuery(lc);
+                if (pendingLookup != null) {
+                    LookupContinuation lc = pendingLookup.processResponse(response);
+                    synchronized (pendingLookup) {
+                        if (lc == null) {
+                            pendingLookup.completeLookup();
+                            pendingLookup.notify();
+                        } else {
+                            pendingLookup.submitQuery(lc);
+                        }
                     }
-                }
+				} else {
+					System.err.println("DNSJNIO LookupAsynch " + 
+							"ERROR - ProcessingTask ignoring good response (id = "  +
+							response.getId() + ") due to no known request");
+				}
             }
         }
     }
