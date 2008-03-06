@@ -98,9 +98,9 @@ public class ExtendedNonblockingResolver implements Resolver {
 //			String name = request.query.getQuestion().getName().toString();
 //			System.out.println("Sending first request for " + name
 //					+ " to new resolver " + request.currentIndex);
-			sendQueryToNextResolver(request);
 
 			clientRequests.put(request.responseId, request);
+			sendQueryToNextResolver(request);
 		}
 
 		private void processResponse(Response response, QueryRequest request) {
