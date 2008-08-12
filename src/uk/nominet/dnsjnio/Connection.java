@@ -61,20 +61,20 @@ public abstract class Connection {
         this(listener, BUFFER_SIZE);
     }
 
-    public void removeListener(ConnectionListener listener) {
-        if (this.listener == listener) {
-            this.listener = null;
+    public void removeListener(ConnectionListener newListener) {
+        if (listener == newListener) {
+            listener = null;
         }
     }
 
     protected void fireDataAvailable(byte[] data) {
-        if (this.listener != null) {
+        if (listener != null) {
             listener.dataAvailable(data, this);
         }
     }
 
     private void fireStateChanged() {
-        if (this.listener != null) {
+        if (listener != null) {
             if (state == State.OPENED) {
                 listener.readyToSend(this);
             }
@@ -113,7 +113,7 @@ public abstract class Connection {
         }
     }
 
-    public void disconnect() {
+    public boolean disconnect() {
         if (! DnsController.isSelectThread()) {
             DnsController.invoke(new Runnable() {
                 public void run() {
@@ -121,8 +121,9 @@ public abstract class Connection {
                 }
             } );
         } else {
-            close();
+            return close();
         }
+        return true;
     }
 
     /**
@@ -146,11 +147,14 @@ public abstract class Connection {
      */
     public void doWrite() {
         // Deselect OP_WRITE, but don't enable OP_READ until the end of the write
+    	if (sk.isValid()) {
         sk.interestOps(0);
 //        sk.interestOps(SelectionKey.OP_READ);
         writeReady = true;				// write is ready
         if(sendBuffer != null)write(sendBuffer);	// may have a partial write
         writeQueued();					// write out rest of queue
+    	}
+    	else closeComplete();
     }
 
     /**
@@ -193,12 +197,12 @@ public abstract class Connection {
         }
     }
     
-    protected void setLocalAddress(InetSocketAddress localAddr) {
-    	this.localAddress = localAddr;
+    protected void setLocalAddress(InetSocketAddress newLocalAddr) {
+    	localAddress = newLocalAddr;
     }
 
-    protected void setRemoteAddress(InetSocketAddress remoteAddr) {
-        this.remoteAddress = remoteAddr;
+    protected void setRemoteAddress(InetSocketAddress newRemoteAddr) {
+        remoteAddress = newRemoteAddr;
     }
 
     protected void setRemoteAddress(String address) {
@@ -308,16 +312,16 @@ public abstract class Connection {
         }
     }
 
-    protected abstract void close();
+    protected abstract boolean close();
     protected abstract void connect();
     protected abstract void write(ByteBuffer buf);
     protected abstract void closeChannel() throws IOException;
     public abstract void doRead();
     public abstract void doConnect();
 
-    protected void setState(int state) {
-        if (this.state != state) {
-            this.state = state;
+    protected void setState(int newState) {
+        if (state != newState) {
+            state = newState;
             fireStateChanged();
         }
     }

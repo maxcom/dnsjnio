@@ -51,13 +51,20 @@ public class ExtendedNonblockingResolver implements Resolver {
 		protected NonblockingResolver currentResolver = null;
 	}
 
+	static Integer threadCount = new Integer(0);
+
 	private class ResolutionThread extends Thread {
 		NonblockingResolver[] resolvers;
 
 		ExtendedNonblockingResolver eres;
-
+		
 		public ResolutionThread(ExtendedNonblockingResolver eres) {
-			setName("EnbrResolutionThread");
+			int count = 0;
+			synchronized (threadCount) {
+				count = threadCount.intValue();
+				threadCount = new Integer(threadCount.intValue() + 1);
+			}
+			setName("EnbrResolutionThread-" + count);
 			List l = eres.resolvers;
 			resolvers = (NonblockingResolver[]) l
 					.toArray(new NonblockingResolver[l.size()]);
@@ -114,8 +121,9 @@ public class ExtendedNonblockingResolver implements Resolver {
 				// Now queue the response for the client.
 				request.responseQueue.insert(response);
 			} else {
-				// No longer have the request so must have responded. Ignore it.
-				System.err.println("DNSJNIO ExtendedNonblockingResolver ERROR - ProcessResponse ignoring good response due to no known request");
+				// No longer have the request so must have received a response already (and removed the query from the list). 
+				// Silently ignore it.
+				// Thanks to Max Valjanski for helping to identify the need to remove the earlier misleading error output!
 			}
 		}
 

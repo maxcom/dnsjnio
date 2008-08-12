@@ -197,7 +197,7 @@ public class SinglePortTransactionController extends AbstractTransaction {
     /**
      * Disconnect.
      */
-    protected void disconnect(QueryData qData) {
+    protected boolean disconnect(QueryData qData) {
         // We only want to disconnect if there are no outstanding queries on that connection
         // Remove this query from the list
         Map queryMap = getQueryDataMap(qData.getConnection());
@@ -211,6 +211,7 @@ public class SinglePortTransactionController extends AbstractTransaction {
         if (disconnect) {
             disconnect(qData.getConnection());
         }
+        return true;
     }
 
     /**

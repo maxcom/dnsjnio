@@ -27,8 +27,6 @@ import org.xbill.DNS.*;
  * when it all times out (using test server)
  */
 public class LookupAsynchTest extends TestCase {
-	public final static String REAL_SERVER = "ns0.validation-test-servers.nominet.org.uk.";
-
 	final static String TEST_SERVER = "localhost";
 
 	final static int PORT = TestServer.PORT;

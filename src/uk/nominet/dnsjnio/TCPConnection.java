@@ -36,7 +36,7 @@ public class TCPConnection extends Connection {
         super (listener, buffSize);
     }
 
-    protected void close() {
+    protected boolean close() {
         if(getState() != State.CLOSED) {
             SocketChannel sc = (SocketChannel)sk.channel();
             if(sc.isOpen()) {
@@ -54,6 +54,7 @@ public class TCPConnection extends Connection {
                 closeComplete();
             }
         }
+        return true; // @TODO@ Apply same fix here as for UDPConnection, if it works.
     }
 
     protected void connect() {

@@ -72,7 +72,7 @@ public class NonblockingResolver implements INonblockingResolver {
 
 	private SinglePortTransactionController transactionController;
 
-	private boolean useSinglePort = false;
+	final private boolean useSinglePort = false;
 
 	private InetSocketAddress localAddress = new InetSocketAddress(0); // use
 																		// random
@@ -225,24 +225,25 @@ public class NonblockingResolver implements INonblockingResolver {
 		this.ignoreTruncation = flag;
 	}
 
-	/**
-	 * Set single port mode on or off
-	 * 
-	 * @param useSamePort
-	 *            should same port be used for all the queries?
-	 */
-	public void setSinglePort(boolean useSamePort) {
-		this.useSinglePort = useSamePort;
-	}
-
-	/**
-	 * In single port mode?
-	 * 
-	 * @return true if a single port should be used for all queries
-	 */
-	public boolean isSinglePort() {
-		return useSinglePort;
-	}
+	// THESE METHODS HAVE BEEN REMOVED : SEE http://www.us-cert.gov/cas/techalerts/TA08-190B.html
+//	/**
+//	 * Set single port mode on or off
+//	 * 
+//	 * @param useSamePort
+//	 *            should same port be used for all the queries?
+//	 */
+//	public void setSinglePort(boolean useSamePort) {
+//		this.useSinglePort = useSamePort;
+//	}
+//
+//	/**
+//	 * In single port mode?
+//	 * 
+//	 * @return true if a single port should be used for all queries
+//	 */
+//	public boolean isSinglePort() {
+//		return useSinglePort;
+//	}
 
 	public void setEDNS(int level, int payloadSize, int flags, List options) {
 		if (level != 0 && level != -1)

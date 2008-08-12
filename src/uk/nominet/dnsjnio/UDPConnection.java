@@ -120,24 +120,32 @@ public class UDPConnection extends Connection {
     /**
      * close the connection and its socket
      */
-    protected void close() {
+    protected boolean close() {
+    	boolean didClose = false;
         if((getState() != State.CLOSED) && (getState() != State.CLOSING)) {
-            DatagramChannel sc = (DatagramChannel)sk.channel();
-            if(sc.isOpen()) {
-                if(getState() == State.OPENED) {
-                    sk.interestOps(0);
-                    setState(State.CLOSING);
-                    try {
-                        sc.close();
+        	// Fix for 20080801 bug reported by :
+        	// Allan O'Driscoll for sporadic NullPointerException - thanks, Allan!
+        	if (sk != null) {
+                DatagramChannel sc = (DatagramChannel)sk.channel();
+                if(sc != null && sc.isOpen()) {
+                    didClose = true;
+                    if(getState() == State.OPENED) {
+                        sk.interestOps(0);
+                        setState(State.CLOSING);
+                        try {
+                            sc.close();
+                        }
+                        catch (IOException e) {
+                            e.printStackTrace();
+                        //     log error
+                        }
                     }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                        // log error
-                    }
+                    closeComplete();
                 }
-                closeComplete();
-            }
+        	}
         }
+        return didClose;
+//        return true;
     }
 
     protected void closeChannel() throws IOException {

@@ -19,7 +19,6 @@ package uk.nominet.dnsjnio;
 import junit.framework.TestCase;
 import org.xbill.DNS.*;
 
-import java.net.*;
 import java.io.*;
 
 /**

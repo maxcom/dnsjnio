@@ -25,12 +25,18 @@ import org.xbill.DNS.ResolverListener;
  * Abstract superclass for the Transaction and SinglePortTransaction classes
  */
 public abstract class AbstractTransaction implements ConnectionListener, TimerListener {
-    protected void disconnect(Connection connection) {
+    protected boolean disconnect(Connection connection) {
         if (connection != null) {
-            connection.disconnect();
-            connection.removeListener(this);
-            connection = null;
+        	// If disconnect returns false, then the connection has already been closed,
+        	// and the user will be sent the data.
+        	// Otherwise, we close.
+        	connection.removeListener(this);
+            if (connection.disconnect()) {
+            	connection = null;
+            	return true;
+            }
         }
+        return false;
     }
 
     public int getPort() {
@@ -44,7 +50,7 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
         }
     }
 
-    protected abstract void disconnect(QueryData qData);
+    protected abstract boolean disconnect(QueryData qData);
     protected abstract void returnException(Exception e, QueryData qData);
 
     /**
@@ -52,8 +58,10 @@ public abstract class AbstractTransaction implements ConnectionListener, TimerLi
      * When timer completes, end the connection and throw an IOException to the caller.
      */
     public void timedOut(QueryData qData) {
-        disconnect(qData);
-        returnException(new SocketTimeoutException("Timed out"), qData);
+    	// only return an exception if we actually closed the connection
+        if (disconnect(qData)) {
+            returnException(new SocketTimeoutException("Timed out"), qData);
+        }
     }
 
     protected static void returnResponse(ResolverListener listener, ResponseQueue responseQueue, Message message, Object id) {

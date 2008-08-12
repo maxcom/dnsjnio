@@ -50,6 +50,7 @@ public class Transaction extends AbstractTransaction {
     private ResponseQueue responseQueue;
     private ResolverListener listener = null;
     protected int udpSize;
+    protected boolean answered = false;
 
     /**
      * Transaction constructor
@@ -121,8 +122,8 @@ public class Transaction extends AbstractTransaction {
     /**
      * Disconnect.
      */
-    protected void disconnect(QueryData ignoreMe) {
-        disconnect(connection);
+    protected boolean disconnect(QueryData ignoreMe) {
+        return disconnect(connection);
     }
 
     /**
@@ -171,18 +172,24 @@ public class Transaction extends AbstractTransaction {
      * @param message the response
      */
     private void returnResponse(Message message) {
-        // Stop the timer!
-        cancelTimer();
-        returnResponse(listener, responseQueue, message, id);
+    	if (!answered) {
+    		answered = true;
+            // Stop the timer!
+            cancelTimer();
+            returnResponse(listener, responseQueue, message, id);
+    	}
     }
 
     /**
      * Throw an Exception to the listener
      */
     protected void returnException(Exception e, QueryData ignoreMe) {
-        // Stop the timer!
-        cancelTimer();
-        returnException(listener, responseQueue, e, id);
+    	if (!answered) {
+    		answered = true;
+            // Stop the timer!
+            cancelTimer();
+            returnException(listener, responseQueue, e, id);
+    	}
     }
 
     /**

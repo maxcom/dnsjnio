@@ -61,10 +61,11 @@ public class PortTest extends TestCase {
 		Timer.reset();
 	}
 
-	public void testSamePort() throws Exception {
-		singlePort = true;
-		runTheTest();
-	}
+	// THIS METHOD HAS BEEN REMOVED : SEE http://www.us-cert.gov/cas/techalerts/TA08-190B.html
+//	public void testSamePort() throws Exception {
+//		singlePort = true;
+//		runTheTest();
+//	}
 
 	public void testDifferentPort() throws Exception {
 		singlePort = false;
@@ -90,7 +91,7 @@ public class PortTest extends TestCase {
 		// }
 		resolver.setRemotePort(PORT);
 		resolver.setTimeout(TIMEOUT);
-		resolver.setSinglePort(singlePort);
+//		resolver.setSinglePort(singlePort);
 		for (int i = 0; i < numClients; i++) {
 			Object id = new Integer(idCount++);
 			Message query = getQuery("example" + ((Integer) (id)).intValue()

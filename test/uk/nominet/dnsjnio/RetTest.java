@@ -20,7 +20,6 @@ import junit.framework.TestCase;
 import org.xbill.DNS.*;
 
 import java.util.List;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -38,7 +37,8 @@ public class RetTest extends TestCase {
     int queriesSoFar = 0;
     final static String SERVER = "localhost";
     final static int PORT = TestServer.PORT;
-    final static int TIMEOUT = 10;
+    final static int TIMEOUT_LONG = 10;
+    final static int TIMEOUT_SHORT = 0;
     public static int threadIdCount = 0;
     final static Random random = new Random();
     Object lock = new Object();
@@ -106,7 +106,7 @@ public class RetTest extends TestCase {
 //            resolver = new NonblockingResolver(SERVER);
             resolver = new NonblockingResolver(SERVER);
             resolver.setPort(PORT);
-            resolver.setTimeout(TIMEOUT);
+            resolver.setTimeout(TIMEOUT_LONG, TIMEOUT_SHORT);
         }
 
         public int getQueriesInProgress() {
