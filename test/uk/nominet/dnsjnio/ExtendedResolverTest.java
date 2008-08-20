@@ -59,6 +59,7 @@ public class ExtendedResolverTest extends TestCase {
 			resolvers[i] = res;
 		}
 		eres = ExtendedNonblockingResolver.newInstance(resolvers);
+		eres.setRetries(1);
 	}
 
 	private void stopServers() {
@@ -83,6 +84,11 @@ public class ExtendedResolverTest extends TestCase {
 		runSomeGoodTest();
 		// d) Now try a synchronous test
 		runSynchronousTest();
+		
+		// e) Now try a query with some of the servers timing out, and see
+		// what query ID we get back.
+		runDifferentQidTest();
+		
 //		stopServers();
 	}
 
@@ -113,15 +119,11 @@ public class ExtendedResolverTest extends TestCase {
 	public void runSynchronousTest() throws Exception {
 		System.out.println("runSynchronousTest");
 		// Try getting a good reply
-		Name name = Name.fromString("example.net", Name.root);
-		Record question = Record.newRecord(name, Type.A, DClass.ANY);
-		Message query = Message.newQuery(question);
+		Message query = makeQuery();
 		eres.send(query);
 
 		// And try getting a timeout
-		name = Name.fromString("timeout.example.net", Name.root);
-		question = Record.newRecord(name, Type.A, DClass.ANY);
-		query = Message.newQuery(question);
+		query = makeTimeoutQuery();
 		try {
 			eres.send(query);
 			assertTrue("Should get a timeout", false);
@@ -130,8 +132,25 @@ public class ExtendedResolverTest extends TestCase {
 		}
 	}
 
+	private Message makeQuery() throws TextParseException {
+		Name name = Name.fromString("example.net", Name.root);
+		Record question = Record.newRecord(name, Type.A, DClass.ANY);
+		Message query = Message.newQuery(question);
+		return query;
+	}
+
+	private Message makeTimeoutQuery() throws TextParseException {
+		Name name;
+		Record question;
+		Message query;
+		name = Name.fromString("timeout.example.net", Name.root);
+		question = Record.newRecord(name, Type.A, DClass.ANY);
+		query = Message.newQuery(question);
+		return query;
+	}
+
 	private void runMultipleQueries(boolean expectedOk) throws Exception {
-		// @todo@ Send a load of concurrent queries to the ENBR
+		// Send a load of concurrent queries to the ENBR
 		Name name = Name.fromString("example.net", Name.root);
 		if (!expectedOk) {
 			// Change the name to get the server to time out
@@ -172,5 +191,22 @@ public class ExtendedResolverTest extends TestCase {
 			assertTrue(bad == 0);
 		} else
 			assertTrue(bad == NUM_REQUESTS);
+	}
+	
+	public void runDifferentQidTest() throws Exception {
+		// Query for timeout. The first few queries will fail.
+		// We want to set the timeout such that query will eventually succeed.
+		// We then want to check the QID of the returned query.
+		// Can we find out which server it was from?
+		eres.setTimeout(0,100);
+		eres.setRetries(10);
+		Message query = makeQuery();
+		query.getHeader().setID(42);
+		long startTime = System.currentTimeMillis();
+		Message response = eres.send(query);
+		long endTime = System.currentTimeMillis();
+		assertTrue((endTime - startTime) > 200);
+		int backID = response.getHeader().getID();
+		assertTrue(backID != 42);
 	}
 }

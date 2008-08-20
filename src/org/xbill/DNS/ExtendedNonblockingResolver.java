@@ -27,13 +27,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 public class ExtendedNonblockingResolver implements Resolver {
+	private static java.util.Random random = new java.util.Random();
+
 	private class QueryRequest {
 		protected ResponseQueue responseQueue;
 
 		protected Object responseId;
 
 		protected Message query;
-
+		
 		public QueryRequest(ResponseQueue responseQueue, Object responseId,
 				Message query) {
 			this.responseQueue = responseQueue;
@@ -190,10 +192,21 @@ public class ExtendedNonblockingResolver implements Resolver {
 		private void dealWithTimeout(Response nextResponse, QueryRequest request) {
 			NonblockingResolver res = ((QueryId)(nextResponse.getId())).resolver;
 //			System.out.println("Got an exception from " + res);
-			if (((Integer) (request.sent.get(res))).intValue() < retries) {
+			int numRetries = ((Integer) (request.sent.get(res))).intValue() - 1;
+			if (numRetries < retries) {
 //				System.out.println("Sending again to " + res);
 				QueryId id = new QueryId(request, res);
-				res.sendAsync(request.query, id, queryQueue);
+				
+				// Create a new query with a different QID here
+				
+				Message newQuery = (Message)(request.query.clone());
+				newQuery.getHeader().setID(random.nextInt(65535));
+		
+				// Double the timeout here
+				int resolverTimeout = res.getTimeoutMillis();
+				int newTimeout = resolverTimeout << numRetries;
+				
+				res.sendAsync(newQuery, id, newTimeout, false, queryQueue);
 				request.outstanding++;
 //				System.out.println("oustanding = " + request.outstanding);
 				Integer i = (Integer) (request.sent.get(res));
@@ -229,11 +242,17 @@ public class ExtendedNonblockingResolver implements Resolver {
 		private void sendQueryToNextResolver(QueryRequest request) {
 			request.currentResolver = resolvers[request.currentIndex++];
 			QueryId id = new QueryId (request, request.currentResolver);
-			request.currentResolver.sendAsync(request.query,
+			
+			// Create a new query with a different QID here
+			
+			Message newQuery = (Message)(request.query.clone());
+			newQuery.getHeader().setID(random.nextInt(65535));
+			
+			request.currentResolver.sendAsync(newQuery,
 					id, queryQueue);
 			request.sent.put(request.currentResolver, new Integer(1));
 			request.outstanding++;
-//			System.out.println("oustanding = " + request.outstanding);
+//			System.out.println("outstanding = " + request.outstanding);
 		}
 
 		private void sendExceptionToClient(QueryRequest request) {
@@ -379,6 +398,13 @@ public class ExtendedNonblockingResolver implements Resolver {
 	 * Sends a message and waits for a response. Multiple servers are queried,
 	 * and queries are sent multiple times until either a successful response is
 	 * received, or it is clear that there is no successful response.
+	 * It is possible that the QID of the Message returned will be different to 
+	 * the QID of the Message which was sent. This is due to round-robin queries
+	 * to multiple servers, and timeout repeat queries - all of which need to be
+	 * sent with a unique QID.
+	 * If your client code requires the same QID to be returned as was sent, then
+	 * you will need to use the NonblockingResolver class instead, and perform
+	 * your own retries/round-robins.
 	 * 
 	 * @param query
 	 *            The query to send.

@@ -37,7 +37,18 @@ public class UDPConnection extends Connection {
         try {
             DatagramChannel sch = DatagramChannel.open();
             sch.configureBlocking(false);
-        	sch.socket().bind(localAddress);
+            
+            // Pick up SocketException here, and keep rebinding to different random port
+            boolean connectedOk = false;
+            while (!connectedOk) {
+              try {
+        	    sch.socket().bind(localAddress);
+        	    connectedOk = true;
+              } catch (java.net.SocketException e) {
+            	// Pick another random port.
+            	localAddress = org.xbill.DNS.NonblockingResolver.getNewInetSocketAddressWithRandomPort(localAddress.getAddress());
+              }
+            }
             sk = sch.register(DnsController.getSelector(),0);
             sch.connect(remoteAddress);
             attach(sk);
@@ -72,6 +83,11 @@ public class UDPConnection extends Connection {
      * process a read ready selection
      */
     public void doRead() {
+    	
+    	// Make sure that the IP we're receiving from is the IP we sent to!
+    	// This is done by the DatagramChannel, which only receives datagrams
+    	// from the peer it is connected with.
+    	
         DatagramChannel sc = (DatagramChannel)sk.channel();
         try {
             readFromChannel(sc);

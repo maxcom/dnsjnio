@@ -69,6 +69,9 @@ public class NonblockingResolver implements INonblockingResolver {
 	// to match up replies to outstanding queries.
 	//
 	private static short uniqueID = 0;
+	
+	private static java.util.Random random = new java.util.Random();
+
 
 	private SinglePortTransactionController transactionController;
 
@@ -288,8 +291,14 @@ public class NonblockingResolver implements INonblockingResolver {
 		timeoutValue = (secs * 1000) + millisecs;
 	}
 
+	// For backwards compatability
 	int getTimeout() {
 		return timeoutValue / 1000;
+	}
+	
+	// For use by ENBR, but probably useful for clients! Not in standard Resolver interface, though
+	public int getTimeoutMillis() {
+		return timeoutValue;
 	}
 
 	private int maxUDPSize(Message query) {
@@ -303,7 +312,10 @@ public class NonblockingResolver implements INonblockingResolver {
 	/**
 	 * Sends a message to a single server and waits for a response. No checking
 	 * is done to ensure that the response is associated with the query (other
-	 * than checking that the DNS packet IDs are equal)
+	 * than checking that the DNS packet IDs are equal, and that the IP address
+	 * which sent the response is the IP address the query was sent to)
+	 * The QID of the Message which is sent will be the QID of the Message which
+	 * is returned. 
 	 * 
 	 * @param query
 	 *            The query to send.
@@ -404,7 +416,7 @@ public class NonblockingResolver implements INonblockingResolver {
 	 */
 	public void sendAsync(final Message query, Object id,
 			final ResponseQueue responseQueue) {
-		sendAsync(query, id, getTimeout(), useTCP, responseQueue);
+		sendAsync(query, id, timeoutValue, useTCP, responseQueue);
 	}
 
 	public void sendAsync(final Message inQuery, Object id, int inQueryTimeout,
@@ -435,7 +447,7 @@ public class NonblockingResolver implements INonblockingResolver {
 			}
 		}
 
-		int queryTimeout = 1000 * inQueryTimeout;
+		int queryTimeout = inQueryTimeout;
 		Message query = (Message) inQuery.clone();
 		applyEDNS(query);
 		if (tsig != null)
@@ -480,11 +492,9 @@ public class NonblockingResolver implements INonblockingResolver {
 				transactionController.sendQuery(qData, id, listener, endTime);
 			}
 		} else {
-			// InetSocketAddress sa = new InetSocketAddress(remoteAddress,
-			// port);
-			// Use random port
-			InetSocketAddress localAddr = new InetSocketAddress(localAddress
-					.getAddress(), 0);
+			// Pick a random port here - don't leave it to the OS!
+			InetSocketAddress localAddr = getNewInetSocketAddressWithRandomPort(localAddress.getAddress());
+			
 			Transaction transaction = new Transaction(remoteAddress, localAddr,
 					tsig, tcp, ignoreTruncation);
 			if (!tcp) {
@@ -497,6 +507,12 @@ public class NonblockingResolver implements INonblockingResolver {
 				transaction.sendQuery(query, id, listener, endTime);
 			}
 		}
+	}
+
+	public static InetSocketAddress getNewInetSocketAddressWithRandomPort(InetAddress addr) {
+		int portNum = 1024 + random.nextInt(65535 - 1024);
+		InetSocketAddress localAddr = new InetSocketAddress(addr, portNum);
+		return localAddr;
 	}
 
 	// private Message
