@@ -73,9 +73,10 @@ public final class LookupAsynch {
                         }
                     }
 				} else {
-					System.err.println("DNSJNIO LookupAsynch " + 
-							"ERROR - ProcessingTask ignoring good response (id = "  +
-							response.getId() + ") due to no known request");
+					// Response must have already come in from another query - ignore it
+//					System.err.println("DNSJNIO LookupAsynch " + 
+//							"ERROR - ProcessingTask ignoring good response (id = "  +
+//							response.getId() + ") due to no known request");
 				}
             }
         }
@@ -136,6 +137,8 @@ public final class LookupAsynch {
     private static Name[] defaultSearchPath;
 
     private static Map defaultCaches;
+    
+    private static java.util.Random random = new java.util.Random();
 
     private ExtendedNonblockingResolver resolver;
 
@@ -659,7 +662,10 @@ public final class LookupAsynch {
     private Response processQuery(Message query) {
         Response r = new Response();
         try {
-            r.setMessage(resolver.send(query));
+			Message newQuery = (Message)(query.clone());
+            int rnd = random.nextInt(65535);
+            newQuery.getHeader().setID(rnd);
+            r.setMessage(resolver.send(newQuery));
         } catch (IOException e) {
             r.setException(true);
             r.setException(e);
@@ -762,9 +768,12 @@ public final class LookupAsynch {
 
     private void submitQuery(LookupContinuation lc) {
         currentLookupContinuation = lc;
-        int nextId = nextId();
-        pendingLookups.put(new Integer(nextId), this);
-        resolver.sendAsync(lc.getQuery(), new Integer(nextId), responseQueue);
+        Integer nextId = new Integer(nextId());
+        pendingLookups.put(nextId, this);
+        Message toSend = (Message)(lc.getQuery().clone());
+        int rnd = random.nextInt(65535);
+        toSend.getHeader().setID(rnd);
+        resolver.sendAsync(toSend, nextId, responseQueue);
     }
 
     

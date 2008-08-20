@@ -34,6 +34,8 @@ public class LookupAsynchTest extends TestCase {
 	final static int NUM_SERVERS = 3;
 
 	final static int TIMEOUT = 2;
+	
+	ExtendedNonblockingResolver eres;
 
 	public LookupAsynchTest(String arg0) {
 		super(arg0);
@@ -118,19 +120,20 @@ public class LookupAsynchTest extends TestCase {
 			servers[i] = TestServer.startServer(PORT + 1 + i, NUM_LOOKUPS + 1,
 					1);
 			NonblockingResolver res = new NonblockingResolver(TEST_SERVER);
-			res.setTimeout(TIMEOUT);
 			res.setPort(PORT + 1 + i);
 			resolvers[i] = res;
 		}
-		ExtendedNonblockingResolver eres = ExtendedNonblockingResolver
+		eres = ExtendedNonblockingResolver
 				.newInstance(resolvers);
-		eres.setRetries(1);
 		LookupAsynch.setDefaultResolver(eres);
 	}
 
 	private void doTestLookupAsynchTimeout() throws Exception {
 		// Start a query which will never end
 		// wait for the required timeout period
+		eres.setRetries(0);
+		eres.setTimeout(1);
+		LookupAsynch.setDefaultResolver(eres);
 		LookupAsynch la = new LookupAsynch("timeout.example.net", Type.A);
 		ran = false;
 		Runnable completionTask = new Runnable() {
@@ -160,6 +163,9 @@ public class LookupAsynchTest extends TestCase {
 	public void doTestMultipleLookups() throws Exception {
 		// We'd like to test good replies, NXDOMAINS, and timeouts at once
 		ran = false;
+		eres.setRetries(0);
+		eres.setTimeout(2);
+		LookupAsynch.setDefaultResolver(eres);
 		LookupAsynch[] las = new LookupAsynch[NUM_LOOKUPS];
 		Runnable completionTask = new Runnable() {
 			public void run() {
