@@ -84,7 +84,10 @@
 
     <target name="demo" depends="compile">
         <java classname="DemoClient"
-              classpathref="dnsjnio.classpath"/>
+              classpathref="dnsjnio.classpath"
+        	  fork="true">
+              <jvmarg value="-XX:+AggressiveHeap"/>
+        </java>
     </target>
 
     <target name="test" depends="run.test, make.junit.report"/>
