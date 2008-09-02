@@ -52,6 +52,7 @@ public class DemoClient {
         resolver = new NonblockingResolver();
         resolver.setTimeout(30);
         resolver.setTCP(true);
+        resolver.setSinglePort(true);
         ResponseQueue responseQueue = new ResponseQueue();
         // Send all the queries asynchronously
         for (int i = 0; i < toResolve.size(); i++) {
@@ -100,10 +101,10 @@ public class DemoClient {
         }
         catch (FileNotFoundException e) {
         	try {
-            in = new BufferedReader(new FileReader("demo\\"+ fileName));
+            in = new BufferedReader(new FileReader("demo" + java.io.File.separator + fileName));
         	}
         	catch (FileNotFoundException ex) {
-        		throw new FileNotFoundException("Can't find " + fileName + " or demo\\" + fileName);
+        		throw new FileNotFoundException("Can't find " + fileName + " or demo" + java.io.File.separator + fileName);
         	}
         }
 
