@@ -379,7 +379,7 @@ public class NonblockingResolver implements INonblockingResolver {
 	 */
 	public void sendAsync(Message message, Object id,
 			ResolverListener resolverListener) {
-		sendAsync(message, id, getTimeout(), useTCP, null, false,
+		sendAsync(message, id, timeoutValue, useTCP, null, false,
 				resolverListener);
 	}
 
