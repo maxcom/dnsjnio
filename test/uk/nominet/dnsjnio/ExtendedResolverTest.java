@@ -198,15 +198,15 @@ public class ExtendedResolverTest extends TestCase {
 		// We want to set the timeout such that query will eventually succeed.
 		// We then want to check the QID of the returned query.
 		// Can we find out which server it was from?
-		eres.setTimeout(0,100);
+		eres.setTimeout(0,50);
 		eres.setRetries(10);
 		Message query = makeQuery();
 		query.getHeader().setID(42);
 		long startTime = System.currentTimeMillis();
 		Message response = eres.send(query);
 		long endTime = System.currentTimeMillis();
-		assertTrue((endTime - startTime) > 200);
+		assertTrue("Too short", (endTime - startTime) >= 100);
 		int backID = response.getHeader().getID();
-		assertTrue(backID != 42);
+		assertTrue("Wrong ID!", backID != 42);
 	}
 }

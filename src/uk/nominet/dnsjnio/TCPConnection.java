@@ -37,24 +37,31 @@ public class TCPConnection extends Connection {
     }
 
     protected boolean close() {
+    	boolean didClose = false;
         if(getState() != State.CLOSED) {
-            SocketChannel sc = (SocketChannel)sk.channel();
-            if(sc.isOpen()) {
-                if(getState() == State.OPENED) {
-                    sk.interestOps(0);
-                    setState(State.CLOSING);
-                    Socket sock = sc.socket();
-                    try {
-                        sock.shutdownOutput();
-                    } catch(IOException se) {
-                        se.printStackTrace();
-                        // log error
-                    }
-                }
-                closeComplete();
-            }
+        	// Fix for 20080801 bug reported by :
+        	// Allan O'Driscoll for sporadic NullPointerException - thanks, Allan!
+        	if (sk != null) {
+        		SocketChannel sc = (SocketChannel)sk.channel();
+        		if(sc != null && sc.isOpen()) {
+        			didClose = true;
+        			if(getState() == State.OPENED) {
+        				sk.interestOps(0);
+        				setState(State.CLOSING);
+        				Socket sock = sc.socket();
+        				try {
+        					sock.shutdownOutput();
+        				} catch(IOException se) {
+        					se.printStackTrace();
+                        // 	log error
+        				}
+        			}
+        			closeComplete();
+        		}
+        	}
         }
-        return true; // @TODO@ Apply same fix here as for UDPConnection, if it works.
+        return didClose;
+//        return true;
     }
 
     protected void connect() {

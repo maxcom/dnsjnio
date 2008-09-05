@@ -33,6 +33,7 @@ public class QueryData {
     private ResolverListener listener = null;
     protected int udpSize;
     private boolean sent = false;
+    private boolean answered = false;
 
     public Connection getConnection() {
         return connection;
@@ -128,5 +129,13 @@ public class QueryData {
 
     public void setSent(boolean sent) {
         this.sent = sent;
+    }
+
+    public boolean isAnswered() {
+        return answered;
+    }
+
+    public void setAnswered(boolean answered) {
+        this.answered = answered;
     }
 }

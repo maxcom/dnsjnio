@@ -50,7 +50,8 @@ public class Transaction extends AbstractTransaction {
     private ResponseQueue responseQueue;
     private ResolverListener listener = null;
     protected int udpSize;
-    protected boolean answered = false;
+    private boolean answered = false;
+    private Object lock = new Object();
 
     /**
      * Transaction constructor
@@ -157,7 +158,7 @@ public class Transaction extends AbstractTransaction {
                 return;
             }
             if (query.getHeader().getID() != message.getHeader().getID()) {
-                System.out.println("Query wrong id! Expected " + query.getHeader().getID() + " but got " + message.getHeader().getID());
+//                System.out.println("Query wrong id! Expected " + query.getHeader().getID() + " but got " + message.getHeader().getID());
                 return;
             }
             returnResponse(message);
@@ -172,11 +173,17 @@ public class Transaction extends AbstractTransaction {
      * @param message the response
      */
     private void returnResponse(Message message) {
+    	boolean needToRespond = false;
+    	synchronized (lock) {
     	if (!answered) {
     		answered = true;
+    		needToRespond = true;
+    	}
+    	}
+    	if (needToRespond) {
             // Stop the timer!
             cancelTimer();
-            returnResponse(listener, responseQueue, message, id);
+            returnResponse(listener, responseQueue, message, id);    		
     	}
     }
 
@@ -184,8 +191,14 @@ public class Transaction extends AbstractTransaction {
      * Throw an Exception to the listener
      */
     protected void returnException(Exception e, QueryData ignoreMe) {
+    	boolean needToRespond = false;
+    	synchronized (lock) {
     	if (!answered) {
     		answered = true;
+    		needToRespond = true;
+    	}
+    	}
+    	if (needToRespond) {
             // Stop the timer!
             cancelTimer();
             returnException(listener, responseQueue, e, id);

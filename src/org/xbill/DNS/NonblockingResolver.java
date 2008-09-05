@@ -75,7 +75,7 @@ public class NonblockingResolver implements INonblockingResolver {
 
 	private SinglePortTransactionController transactionController;
 
-	final private boolean useSinglePort = false;
+	private boolean useSinglePort = false;
 
 	private InetSocketAddress localAddress = new InetSocketAddress(0); // use
 																		// random
@@ -101,7 +101,6 @@ public class NonblockingResolver implements INonblockingResolver {
 		else
 			addr = InetAddress.getByName(hostname);
 		remoteAddress = new InetSocketAddress(addr, DEFAULT_PORT);
-		// @todo@ Provide overloaded constructors to take local adress/port?
 		transactionController = new SinglePortTransactionController(
 				remoteAddress, localAddress);
 	}
@@ -186,18 +185,6 @@ public class NonblockingResolver implements INonblockingResolver {
 	}
 
 	/**
-	 * Sets the local port to bind to when sending messages. A random port will
-	 * be used if useSinglePort is false.
-	 * 
-	 * @param port
-	 *            The local port to send messages from.
-	 */
-	public void setLocalPort(int port) {
-		localAddress = new InetSocketAddress(localAddress.getHostName(), port);
-		transactionController.setLocalAddress(localAddress);
-	}
-
-	/**
 	 * Sets the server DNS port
 	 * 
 	 * @param port
@@ -228,25 +215,39 @@ public class NonblockingResolver implements INonblockingResolver {
 		this.ignoreTruncation = flag;
 	}
 
-	// THESE METHODS HAVE BEEN REMOVED : SEE http://www.us-cert.gov/cas/techalerts/TA08-190B.html
-//	/**
-//	 * Set single port mode on or off
-//	 * 
-//	 * @param useSamePort
-//	 *            should same port be used for all the queries?
-//	 */
-//	public void setSinglePort(boolean useSamePort) {
-//		this.useSinglePort = useSamePort;
-//	}
-//
-//	/**
-//	 * In single port mode?
-//	 * 
-//	 * @return true if a single port should be used for all queries
-//	 */
-//	public boolean isSinglePort() {
-//		return useSinglePort;
-//	}
+	/**
+	 * Set single port mode on or off
+     * THIS ONLY WORKS FOR TCP-BASED QUERIES - UDP QUERIES WILL ALWAYS USE A RANDOM PORT
+	 * 
+	 * @param useSamePort
+	 *            should same port be used for all the queries?
+	 */
+	public void setSingleTcpPort(boolean useSamePort) {
+		this.useSinglePort = useSamePort;
+	}
+
+	/**
+	 * In single port mode?
+     * THIS ONLY WORKS FOR TCP-BASED QUERIES - UDP QUERIES WILL ALWAYS USE A RANDOM PORT
+	 * 
+	 * @return true if a single port should be used for all queries
+	 */
+	public boolean isSingleTcpPort() {
+		return useSinglePort;
+	}
+
+	/**
+	 * Sets the local port to bind to when sending messages. A random port will
+	 * be used if useSinglePort is false.
+     * THIS ONLY WORKS FOR TCP-BASED QUERIES - UDP QUERIES WILL ALWAYS USE A RANDOM PORT
+	 * 
+	 * @param port
+	 *            The local port to send messages from.
+	 */
+	public void setLocalTcpPort(int port) {
+		localAddress = new InetSocketAddress(localAddress.getHostName(), port);
+		transactionController.setLocalAddress(localAddress);
+	}	
 
 	public void setEDNS(int level, int payloadSize, int flags, List options) {
 		if (level != 0 && level != -1)
@@ -473,7 +474,7 @@ public class NonblockingResolver implements INonblockingResolver {
 
 		// Use SinglePortTransactionController if possible, otherwise get new
 		// Transaction.
-		if (useSinglePort
+		if (useSinglePort && tcp
 				&& transactionController.headerIdNotInUse(query.getHeader()
 						.getID())) {
 			QueryData qData = new QueryData();

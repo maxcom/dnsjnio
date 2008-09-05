@@ -52,7 +52,7 @@ public class DemoClient {
         resolver = new NonblockingResolver();
         resolver.setTimeout(30);
         resolver.setTCP(true);
-//        resolver.setSinglePort(true);
+        resolver.setSingleTcpPort(true);
         ResponseQueue responseQueue = new ResponseQueue();
         // Send all the queries asynchronously
         for (int i = 0; i < toResolve.size(); i++) {

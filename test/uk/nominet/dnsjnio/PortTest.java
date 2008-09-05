@@ -33,10 +33,10 @@ public class PortTest extends TestCase {
 
 	final static int PORT = TestServer.PORT;
 
-	final static int LOCAL_PORT = 5678;
+	final static int LOCAL_PORT = 56789;
 
 	// final static int PORT = 53;
-	final static int TIMEOUT = 10;
+	final static int TIMEOUT = 30;
 
 	int idCount = 0;
 
@@ -61,11 +61,11 @@ public class PortTest extends TestCase {
 		Timer.reset();
 	}
 
-	// THIS METHOD HAS BEEN REMOVED : SEE http://www.us-cert.gov/cas/techalerts/TA08-190B.html
-//	public void testSamePort() throws Exception {
-//		singlePort = true;
-//		runTheTest();
-//	}
+	public void testSamePort() throws Exception {
+		singlePort = true;
+		useTcp = true;
+		doTestManyAsynchronousClients();
+	}
 
 	public void testDifferentPort() throws Exception {
 		singlePort = false;
@@ -86,12 +86,11 @@ public class PortTest extends TestCase {
 		int numClients = 100;
 		int bad = 0;
 		NonblockingResolver resolver = new NonblockingResolver(SERVER);
-		// if (singlePort) {
 		resolver.setLocalAddress(new InetSocketAddress(LOCAL_PORT));
-		// }
 		resolver.setRemotePort(PORT);
 		resolver.setTimeout(TIMEOUT);
-//		resolver.setSinglePort(singlePort);
+		resolver.setSingleTcpPort(singlePort);
+		resolver.setTCP(useTcp);
 		for (int i = 0; i < numClients; i++) {
 			Object id = new Integer(idCount++);
 			Message query = getQuery("example" + ((Integer) (id)).intValue()
@@ -118,13 +117,13 @@ public class PortTest extends TestCase {
 				bad++;
 			}
 		}
-		if (singlePort) {
+		if (singlePort && useTcp) {
 			// Check same port has been used
 			int port0 = ports[0];
 			for (int i = 0; i < (numClients - bad); i++) {
-				assertTrue("Single port system used multiple ports!",
+				assertTrue("Single port system used multiple ports! Got to number " + i,
 						ports[i] == port0);
-				assertTrue("Correct port used (" + LOCAL_PORT + ")",
+				assertTrue("Incorrect port used (was " + ports[i] + ", should have been " + LOCAL_PORT + ")",
 						ports[i] == LOCAL_PORT);
 			}
 		} else {

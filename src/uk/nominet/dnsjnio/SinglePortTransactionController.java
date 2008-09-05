@@ -320,19 +320,25 @@ public class SinglePortTransactionController extends AbstractTransaction {
      * @param message the response
      */
     private void returnResponse(Message message, QueryData qData) {
-        // Stop the timer!
-        cancelTimer(qData);
-        returnResponse(qData.getListener(), qData.getResponseQueue(), message, qData.getId());
+    	if (!qData.isAnswered()) {
+    		qData.setAnswered(true);
+            // Stop the timer!
+            cancelTimer(qData);
+            returnResponse(qData.getListener(), qData.getResponseQueue(), message, qData.getId());
+    	}
     }
 
     /**
      * Throw an Exception to the listener
      */
     protected void returnException(Exception e, QueryData qData) {
-        // Stop the timer!
-        cancelTimer(qData);
-//        System.out.println("Exception for " +qData.getQuery().getHeader().getID());
-        returnException(qData.getListener(), qData.getResponseQueue(), e, qData.getId());
+    	if (!qData.isAnswered()) {
+    		qData.setAnswered(true);
+            // Stop the timer!
+            cancelTimer(qData);
+//          System.out.println("Exception for " +qData.getQuery().getHeader().getID());
+            returnException(qData.getListener(), qData.getResponseQueue(), e, qData.getId());
+    	}
     }
 
     /**
