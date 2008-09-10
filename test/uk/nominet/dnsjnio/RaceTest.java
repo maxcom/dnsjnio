@@ -57,7 +57,7 @@ public class RaceTest extends TestCase {
 					Object id = res.sendAsync(query, q);
 //					System.out.println("Sent query id : " + id + " for timeout of : " + new Integer(timeout-25));
 					java.util.Timer timer = new java.util.Timer();
-					timer.schedule(new RaceTimerTask(id), timeout + 5000);
+					timer.schedule(new RaceTimerTask(id), timeout + 10000);
 					Object testId = new Integer(-2);
 					Response response = null;
 					while (testId != id) {

@@ -67,7 +67,7 @@ public class PortTest extends TestCase {
 		boolean success = false;
 		int count = 0;
 		int port = LOCAL_PORT;
-		while (!success && count < 3) {
+		while (!success && count < 2) {
 			if (doTestManyAsynchronousClients(port)) {
 				success = true;
 				port++;
@@ -131,8 +131,10 @@ public class PortTest extends TestCase {
 			// Check same port has been used
 			int port0 = ports[0];
 			for (int i = 0; i < (numClients - bad); i++) {
-				assertTrue("Single port system used multiple ports! Got to number " + i,
-						ports[i] == port0);
+				if (ports[i] != port0) {
+					System.out.println("Single port system used multiple ports! Got to number " + i);
+					return false;
+				}
 				if (ports[i] != portToUse) {
 					System.out.println("Incorrect port used (was " + ports[i] + ", should have been " + portToUse + ")");
 					return false;
