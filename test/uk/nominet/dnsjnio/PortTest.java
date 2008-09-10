@@ -64,7 +64,17 @@ public class PortTest extends TestCase {
 	public void testSamePort() throws Exception {
 		singlePort = true;
 		useTcp = true;
-		doTestManyAsynchronousClients();
+		boolean success = false;
+		int count = 0;
+		int port = LOCAL_PORT;
+		while (!success && count < 3) {
+			if (doTestManyAsynchronousClients(port)) {
+				success = true;
+				port++;
+			}
+		    count++;
+		}
+		assertTrue("Single port test failed", success);
 	}
 
 	public void testDifferentPort() throws Exception {
@@ -75,18 +85,18 @@ public class PortTest extends TestCase {
 	private void runTheTest() throws Exception {
 		// Try it on udp
 		useTcp = false;
-		doTestManyAsynchronousClients();
+		doTestManyAsynchronousClients(LOCAL_PORT-2);
 		// Try it on tcp
 		useTcp = true;
-		doTestManyAsynchronousClients();
+		doTestManyAsynchronousClients(LOCAL_PORT-1);
 	}
 
-	private void doTestManyAsynchronousClients() throws Exception {
+	private boolean doTestManyAsynchronousClients(int portToUse) throws Exception {
 		// test many NonblockingResolvers using asynchronous sends
 		int numClients = 100;
 		int bad = 0;
 		NonblockingResolver resolver = new NonblockingResolver(SERVER);
-		resolver.setLocalAddress(new InetSocketAddress(LOCAL_PORT));
+		resolver.setLocalAddress(new InetSocketAddress(portToUse));
 		resolver.setRemotePort(PORT);
 		resolver.setTimeout(TIMEOUT);
 		resolver.setSingleTcpPort(singlePort);
@@ -123,8 +133,10 @@ public class PortTest extends TestCase {
 			for (int i = 0; i < (numClients - bad); i++) {
 				assertTrue("Single port system used multiple ports! Got to number " + i,
 						ports[i] == port0);
-				assertTrue("Incorrect port used (was " + ports[i] + ", should have been " + LOCAL_PORT + ")",
-						ports[i] == LOCAL_PORT);
+				if (ports[i] != portToUse) {
+					System.out.println("Incorrect port used (was " + ports[i] + ", should have been " + portToUse + ")");
+					return false;
+				}
 			}
 		} else {
 			// @todo@ Check different port has been used
@@ -139,6 +151,7 @@ public class PortTest extends TestCase {
 		}
 		assertTrue("Too many exceptions! (" + bad + " of " + numClients + ")",
 				bad < (numClients * 0.05));
+		return true;
 	}
 
 	public static int getPortFromResponse(Message m) {
