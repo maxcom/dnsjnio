@@ -42,7 +42,7 @@ public class PortTest extends TestCase {
 
 	ResponseQueue queue = new ResponseQueue();
 
-	TestServer server = TestServer.startServer();
+	final static TestServer server = TestServer.startServer();
 
 	boolean singlePort; // do a single port test?
 
