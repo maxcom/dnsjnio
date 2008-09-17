@@ -37,8 +37,17 @@ public class LookupAsynchTest extends TestCase {
 	
 	ExtendedNonblockingResolver eres;
 
+	TestServer[] servers = new TestServer[NUM_SERVERS];
+
 	public LookupAsynchTest(String arg0) {
 		super(arg0);
+	}
+
+	public void finalize() {
+		for (int i = 0; i < servers.length; i++) {
+		  TestServer server = servers[i];
+		  server.stopRunning();
+		}
 	}
 
 	public void testNormalLookup() throws Exception {
@@ -113,7 +122,6 @@ public class LookupAsynchTest extends TestCase {
 	private void configureTestResolver() throws UnknownHostException {
 		// Start up a load of resolvers on localhost (running on different
 		// ports)
-		TestServer[] servers = new TestServer[NUM_SERVERS];
 
 		NonblockingResolver[] resolvers = new NonblockingResolver[NUM_SERVERS];
 		for (int i = 0; i < NUM_SERVERS; i++) {

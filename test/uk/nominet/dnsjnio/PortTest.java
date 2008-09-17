@@ -40,8 +40,6 @@ public class PortTest extends TestCase {
 
 	int idCount = 0;
 
-	ResponseQueue queue = new ResponseQueue();
-
 	final static TestServer server = TestServer.startServer();
 
 	boolean singlePort; // do a single port test?
@@ -101,6 +99,7 @@ public class PortTest extends TestCase {
 		resolver.setTimeout(TIMEOUT);
 		resolver.setSingleTcpPort(singlePort);
 		resolver.setTCP(useTcp);
+		ResponseQueue queue = new ResponseQueue();
 		for (int i = 0; i < numClients; i++) {
 			Object id = new Integer(idCount++);
 			Message query = getQuery("example" + ((Integer) (id)).intValue()
@@ -141,7 +140,7 @@ public class PortTest extends TestCase {
 				}
 			}
 		} else {
-			// @todo@ Check different port has been used
+			// Check different port has been used
 			for (int i = 0; i < (numClients - bad); i++) {
 				int port = ports[i];
 				// Now go through remainder of array and check no port the same
