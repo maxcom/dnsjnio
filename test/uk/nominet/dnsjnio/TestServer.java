@@ -45,6 +45,7 @@ public class TestServer extends Thread {
     }
     
     public static TestServer startServer() {
+    	stopServer();
     	if (!serverRunning) {
     		serverRunning = true;
     	server = startServer(PORT, NUM_UDP_THREADS, NUM_TCP_THREADS);
