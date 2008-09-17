@@ -42,7 +42,7 @@ public class ServerTest extends TestCase {
 
 	private int headerIdCount = 0;
 
-	TestServer server = TestServer.startServer();
+	static TestServer server = TestServer.startServer();
 
 	public void setUp() {
 		reset();
