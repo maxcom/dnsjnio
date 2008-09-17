@@ -102,7 +102,7 @@ public class TsigTest extends TestCase {
 //		System.out.println(buf);
 		
 		
-		// @TODO@ Can we print out key?!
+		// Can we print out key?!
 		RSAPublicKey pub_key = (RSAPublicKey)(KEYConverter.parseRecord((DNSKEYRecord)rr2));
 //		System.out.println(pub_key.getModulus());
 //		System.out.println(pub_key.getPublicExponent());

@@ -89,7 +89,7 @@ public class ExtendedResolverTest extends TestCase {
 		// what query ID we get back.
 		runDifferentQidTest();
 		
-//		stopServers();
+		stopServers();
 	}
 
 	public void runAllGoodTest() throws Exception {
@@ -111,7 +111,6 @@ public class ExtendedResolverTest extends TestCase {
 		// c) Some servers return response, others throw exceptions
 		// Set some servers to fail and some to return (with random time delays)
 		// Then send the query and make sure it returns.
-		// @todo!! How can we implement this?
 		System.out.println("runSomeGoodTest");
 		runMultipleQueries(true);
 	}

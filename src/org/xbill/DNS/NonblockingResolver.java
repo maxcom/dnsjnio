@@ -33,7 +33,6 @@ import uk.nominet.dnsjnio.Transaction;
  * A nonblocking implementation of Resolver. Multiple concurrent sendAsync
  * queries can be run without increasing the number of threads.
  * 
- * @todo AXFR?
  * 
  */
 public class NonblockingResolver implements INonblockingResolver {
@@ -444,7 +443,6 @@ public class NonblockingResolver implements INonblockingResolver {
 			if (question != null && question.getType() == Type.AXFR) {
 				throw new UnsupportedOperationException(
 						"AXFR not implemented in NonblockingResolver");
-				// return sendAXFR(query); // @TODO@ SORT OUT TRANSFER!
 			}
 		}
 

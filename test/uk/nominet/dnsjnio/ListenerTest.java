@@ -109,7 +109,7 @@ public class ListenerTest extends TestCase {
         }
         long totalTime = endTime - startTime;
         assertTrue("Timeout too short! " + totalTime, totalTime > timeout * 900);
-        assertTrue("Timeout too long! " + totalTime, totalTime < timeout * 1100);
+        assertTrue("Timeout too long! " + totalTime, totalTime < timeout * 1250);
     }
 
     public void testManySequentialAsynchronousRequests() throws Exception {
