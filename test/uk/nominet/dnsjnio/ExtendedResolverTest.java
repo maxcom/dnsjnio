@@ -205,7 +205,7 @@ public class ExtendedResolverTest extends TestCase {
 		long startTime = System.currentTimeMillis();
 		Message response = eres.send(query);
 		long endTime = System.currentTimeMillis();
-		assertTrue("Too short", (endTime - startTime) >= 100);
+		assertTrue("Too short", (endTime - startTime) >= 75);
 		int backID = response.getHeader().getID();
 		assertTrue("Wrong ID!", backID != 42);
 	}
