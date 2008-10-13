@@ -31,7 +31,7 @@ public class CompressTest extends TestCase {
        Message response = res.send(query);
        }
        catch (Exception e) {
-    	   fail();
+    	   fail("UDP test couldn't handle un-compressed records");
        }
 	}
 	
@@ -46,7 +46,7 @@ public class CompressTest extends TestCase {
             res.send(query);
             } 
             catch (Exception e) {
-       	     fail();
+       	     fail("TCP test couldn't handle un-compressed records");
             }
 	}	
 }
