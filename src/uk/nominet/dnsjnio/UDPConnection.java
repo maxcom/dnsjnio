@@ -96,15 +96,18 @@ public class UDPConnection extends Connection {
             return;
         }
 
+        // It's possible that we received more than one DNS packet.
+        // Let's split them out, and send each to the client.
         while (recvCount > 0) {
             if (recvBytes != null) {
                 byte[] packet = new byte[recvCount];
                 System.arraycopy(recvBytes, 0, packet, 0, recvCount);
                 try {
+                	// Get the first packet in the buffer
                     Message m = new Message(packet);
-                    if (m.toWire().length < recvCount) {
-                        packet = new byte[m.toWire().length];
-                        System.arraycopy(recvBytes, 0, packet, 0, m.toWire().length);
+                    if (m.numBytes() < recvCount) {
+                        packet = new byte[m.numBytes()];
+                        System.arraycopy(recvBytes, 0, packet, 0, m.numBytes());
                     }
                     sendToUser(packet); // try to send to user
                     // Now clear the buffer
