@@ -271,7 +271,10 @@ public abstract class Connection {
             } catch(IOException e) {
                 len=-1;
             }
-
+            catch(NullPointerException e) {
+                len=-1;
+            }
+            
             if(len >= 0)
             {
                 addToBuffer(bytes, len);
