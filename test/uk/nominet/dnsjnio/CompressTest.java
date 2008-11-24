@@ -28,7 +28,7 @@ public class CompressTest extends TestCase {
        Message query = Message.newQuery(question);
 
        try {
-       Message response = res.send(query);
+         res.send(query);
        }
        catch (Exception e) {
     	   fail("UDP test couldn't handle un-compressed records");

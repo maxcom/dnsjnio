@@ -28,15 +28,15 @@ import java.util.Random;
 
 public class UdpResponder extends Thread {
     DatagramSocket socket;
-    private static int idCount = 0;
-    private int id = 0;
+//    private static int idCount = 0;
+//    private int id = 0;
     private Random random = new Random();
     private TestServer server;
     private boolean keepRunning = true;
 
     public UdpResponder(DatagramSocket s, TestServer server) {
         socket = s;
-        id = idCount++;
+//        id = idCount++;
         this.server = server;
     }
     
@@ -51,7 +51,7 @@ public class UdpResponder extends Thread {
         }
     }
 
-    private static int returned = 0;
+//    private static int returned = 0;
     private void processClientRequest() {
         byte [] buffer = new byte[1024];
         DatagramPacket packet = null;
