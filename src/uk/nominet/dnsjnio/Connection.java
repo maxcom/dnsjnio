@@ -241,6 +241,7 @@ public abstract class Connection {
         } catch(Exception ce) {
             ce.printStackTrace();
         }
+        sk.cancel();
         inBuf = null;
         recvBytes = null;
         recvCount = 0;
@@ -269,9 +270,6 @@ public abstract class Connection {
             try {
                 len = sc.read(inBuf);
             } catch(IOException e) {
-                len=-1;
-            }
-            catch(NullPointerException e) {
                 len=-1;
             }
             
