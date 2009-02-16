@@ -60,7 +60,13 @@ public class DnsController {
         }
         selectThread = new Thread("DnsSelect") {
             public void run() {
-                selectLoop();
+            	while (true) {
+	            	try {
+	            		selectLoop();
+	            	} catch (Throwable t) {
+                        System.out.println("Caught exception in DnsSelect thread\r\n" + t);
+	            	}
+            	}
             }
         };
         selectThread.setDaemon(true);
@@ -88,7 +94,9 @@ public class DnsController {
             	// and the select loop is not the right place to waste time.
             	// I just don't know whether a separate polling thread (Timer) is the right answer!
                 selector.select();
-            } catch(Exception e) {}
+            } catch(Exception e) {
+                System.out.println("Exception caught in select loop\r\n" + e);
+            }
 
             // process any selected keys
             Set selectedKeys = selector.selectedKeys();

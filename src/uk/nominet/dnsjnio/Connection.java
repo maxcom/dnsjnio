@@ -75,10 +75,10 @@ public abstract class Connection {
 
     private void fireStateChanged() {
         if (listener != null) {
-            if (state == State.OPENED) {
+            if (getState() == State.OPENED) {
                 listener.readyToSend(this);
             }
-            if (state == State.CLOSED) {
+            if (getState() == State.CLOSED) {
                 listener.closed(this);
             }
         }
@@ -231,6 +231,7 @@ public abstract class Connection {
     }
 
     protected void closeComplete() {
+        sk.cancel();
         sk.attach(null);
         try {
             closeChannel();
@@ -241,11 +242,10 @@ public abstract class Connection {
         } catch(Exception ce) {
             ce.printStackTrace();
         }
-        sk.cancel();
+        setState(State.CLOSED);
         inBuf = null;
         recvBytes = null;
         recvCount = 0;
-        setState(State.CLOSED);
     }
 
     protected void clearRecvBytes(int j) {
@@ -265,10 +265,15 @@ public abstract class Connection {
 
     protected void readFromChannel(ByteChannel sc) {
         int len = 0;
-        if(sc.isOpen())
+        ByteBuffer inputBuffer = inBuf; // save a local reference just in case it gets nulled out.
+
+        // TODO: probably need some type of synchronization on the input
+        // buffer because it gets nulled out in closeComplete due to
+        // timeout and then can potentially cause a crash here.
+        if(sc.isOpen() && state != State.CLOSED && inputBuffer != null)
         {
             try {
-                len = sc.read(inBuf);
+                len = sc.read(inputBuffer);
             } catch(IOException e) {
                 len=-1;
             }
@@ -289,18 +294,22 @@ public abstract class Connection {
      * The send to user will be triggered when the end of input is reached.
      */
     protected void addToBuffer(byte[] buf, int len) {
-        if(buf != null)
+    	byte[] receivedBytes = recvBytes; // save a local reference just in case it gets nulled out.
+
+    	// TODO: probably need some type of synchronization on the received
+    	// bytes buffer. It gets nulled out in closeComplete due to timeout
+    	// and then can potentially cause a crash here.
+        if(buf != null && state != State.CLOSED && receivedBytes != null)
         {
-            if (recvCount + len > recvBytes.length) {
-                // Grow the buffer
-                byte[] temp = new byte[recvCount];
-                System.arraycopy(recvBytes, 0, temp, 0, recvCount);
+            if (recvCount + len > receivedBytes.length) {
+                // Grow the buffer, we already kept a reference to the old
+            	// buffer so we don't need to make a temporary copy of it.
                 recvBytes = null;
                 recvBytes = new byte[recvCount + len];
-                System.arraycopy(temp, 0, recvBytes, 0, recvCount);
-                temp = null;
+                System.arraycopy(receivedBytes, 0, recvBytes, 0, recvCount);
+                receivedBytes = recvBytes; // reset the reference
             }
-            System.arraycopy(buf, 0, recvBytes, recvCount, len);
+            System.arraycopy(buf, 0, receivedBytes, recvCount, len);
             recvCount += len;
         }
     }

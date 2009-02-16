@@ -45,8 +45,14 @@ public class UDPConnection extends Connection {
         	    sch.socket().bind(localAddress);
         	    connectedOk = true;
               } catch (java.net.SocketException e) {
-            	// Pick another random port.
+            	// Failure may be caused by picking a port number that was
+            	// already in use. Pick another random port and try again.
+            	// Note that the socket channel is now invalid, we need to
+            	// close it and open a fresh one.
             	localAddress = org.xbill.DNS.NonblockingResolver.getNewInetSocketAddressWithRandomPort(localAddress.getAddress());
+            	sch.close();
+            	sch = DatagramChannel.open();
+            	sch.configureBlocking(false);
               }
             }
             sk = sch.register(DnsController.getSelector(),0);
