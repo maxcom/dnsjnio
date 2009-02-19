@@ -32,21 +32,16 @@ public class ListenerTest extends TestCase {
     private Map results = Collections.synchronizedMap(new HashMap());
     static int threadId = 0;
     Object lock = new Object();
-    static TestServer server = TestServer.startServer();
+	static TestServer server = TestServer.startServer();
 
-    public void setUp() {
-        reset();
-//        server = TestServer.startServer();
-    }
-//    
-//    public void tearDown() {
-//    	server.stopServer();
-//    }
-//
-    
-    public void finalize() {
-       server.stopRunning();    	
-    }
+	public void setUp() {
+		reset();
+		// TestServer.startServer();
+	}
+
+	public void finalize() {
+		server.stopRunning();
+	}
     
     private void reset() {
         resetResults();
@@ -119,7 +114,7 @@ public class ListenerTest extends TestCase {
 
     public void testManyAsynchronousRequests() throws Exception {
         NonblockingResolver resolver = new NonblockingResolver(SERVER);
-        doTestManyAsynchronousRequests(resolver, 500, PORT);
+        doTestManyAsynchronousRequests(resolver, 250, PORT);
     }
 
     private void doTestManyAsynchronousRequests(NonblockingResolver resolver, int numRequests, int port) throws TextParseException, InterruptedException {
@@ -161,7 +156,7 @@ public class ListenerTest extends TestCase {
 
     public void testManyAsynchronousClients() throws Exception {
         // test many NonblockingResolvers using asynchronous sends
-        int numClients = 100;
+        int numClients = 250;
         int startId = idCount;
         int bad = 0;
 

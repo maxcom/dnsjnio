@@ -92,6 +92,9 @@ public class PortTest extends TestCase {
 	private boolean doTestManyAsynchronousClients(int portToUse) throws Exception {
 		// test many NonblockingResolvers using asynchronous sends
 		int numClients = 100;
+        if (useTcp) {
+            numClients = 50;
+        }
 		int bad = 0;
 		NonblockingResolver resolver = new NonblockingResolver(SERVER);
 		resolver.setLocalAddress(new InetSocketAddress(portToUse));

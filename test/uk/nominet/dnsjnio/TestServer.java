@@ -20,7 +20,6 @@ import org.xbill.DNS.*;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.Random;
 import java.util.*;
 
 /**
@@ -31,7 +30,7 @@ public class TestServer extends Thread {
     final static int PORT = 34916;
     ServerSocket tcpSocket;
     DatagramSocket udpSocket;
-    final static int NUM_UDP_THREADS = 600;
+    final static int NUM_UDP_THREADS = 250;
     final static int NUM_TCP_THREADS = 50;
     UdpResponder[] udpServers; // = new UdpResponder[NUM_UDP_THREADS];
     TcpResponder[] tcpServers; // = new TcpResponder[NUM_TCP_THREADS];
@@ -92,9 +91,11 @@ public class TestServer extends Thread {
         	udpServers = new UdpResponder[numUdpThreads];
             try {
                 udpSocket = new DatagramSocket(port);
+//                udpSocket.setSoTimeout(20);
             }
             catch (SocketException e) {
                 e.printStackTrace();
+                System.exit(0);
             }
             for (int i = 0; i < numUdpThreads; i++) {
                 udpServers[i] = new UdpResponder(udpSocket, this);
@@ -104,12 +105,21 @@ public class TestServer extends Thread {
     }
     
     public void stopRunning() {
+        if (serverStarted) {
     	for (int i = 0; i < udpServers.length; i++) {
     		udpServers[i].stopRunning();
     	}
     	for (int i = 0; i < tcpServers.length; i++) {
     		tcpServers[i].stopRunning();
     	}
+        serverStarted = false;
+        udpSocket.close();
+        try {
+        tcpSocket.close();
+        } catch (IOException e) {
+            System.out.println("Error closing TCP socket " + e);
+        }
+        }
     }
 
     public void printMsg(String msg) {

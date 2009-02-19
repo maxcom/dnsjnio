@@ -17,7 +17,7 @@ public class RaceTest extends TestCase {
 
 	private Thread startThreads() {
 		Thread thread = null;
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < 10; i++) {
 			thread = new Racethread(false); // ((i == 0) ? true : false));
 			thread.start();
 		}

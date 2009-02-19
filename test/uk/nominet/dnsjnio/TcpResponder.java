@@ -17,7 +17,6 @@ limitations under the License.
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.Message;
-import uk.nominet.dnsjnio.TestServer;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -53,20 +52,18 @@ public class TcpResponder extends Thread {
 	}
 
 	private void processClientRequest() {
-		while (true) {
+//		while (true) {
 			try {
 				// @todo Should run these as thread pool, started by single
 				// accept() call.
 				clientSocket = serverSocket.accept();
 				output = clientSocket.getOutputStream();
 				is = clientSocket.getInputStream();
-			} catch (IOException e) {
-				e.printStackTrace();
-				server.printMsg("Cannot handle client connection.");
-				cleanup();
-				return;
+			} catch (Exception e) {
+                cleanup();
+                return;
 			}
-
+            
 			while (true) {
 				byte[] inputBytes;
 				try {
@@ -127,7 +124,7 @@ public class TcpResponder extends Thread {
 				}
 				// cleanup();
 			}
-		}
+//		}
 	}
 
 	private void cleanup() {

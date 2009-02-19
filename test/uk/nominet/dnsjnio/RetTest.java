@@ -32,7 +32,7 @@ import java.util.Random;
 public class RetTest extends TestCase {
     final static int NUM_RESOLVERS = 5;
     ResolverWrap[] resolvers = new ResolverWrap[NUM_RESOLVERS];
-    final static int MAX_QUERIES = 100;
+    final static int MAX_QUERIES = 50;
     final static int TOTAL_QUERIES = 10000; // 5  million queries have run successfully
     int queriesSoFar = 0;
     final static String SERVER = "localhost";

@@ -113,7 +113,7 @@ public class ServerTest extends TestCase {
 
 	private void doTestManySequentialAsynchronousRequests(
 			NonblockingResolver resolver) throws TextParseException {
-		int numRequests = 100;
+		int numRequests = 50;
 		String name = "example.net";
 		resolver.setTimeout(TIMEOUT);
 		int bad = 0;
@@ -148,7 +148,7 @@ public class ServerTest extends TestCase {
 
 	private void doTestManyAsynchronousRequests(NonblockingResolver resolver,
 			boolean useSameHeaderId) throws Exception {
-		int numRequests = 500;
+		int numRequests = 250;
 		if (resolver.isTCP()) {
 			numRequests = 50;
 		}
@@ -360,7 +360,7 @@ public class ServerTest extends TestCase {
 	}
 
 	public void testManyThreadedSynchronousClients() throws Exception {
-		int numThreads = 50;
+		int numThreads = 250;
 		List threads = new LinkedList();
 		int bad = 0;
 		for (int i = 0; i < numThreads; i++) {
