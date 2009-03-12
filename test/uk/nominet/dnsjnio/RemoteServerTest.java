@@ -25,7 +25,7 @@ import org.xbill.DNS.*;
  */
 public class RemoteServerTest extends TestCase {
     public final static String REAL_SERVER = "ns0.validation-test-servers.nominet.org.uk.";
-//    public final static String REAL_QUERY_NAME = "dnsjnio-1-0-2 -test1.validation-test-servers.nominet.org.uk.";
+//    public final static String REAL_QUERY_NAME = "dnsjnio-1-0-3-test1.validation-test-servers.nominet.org.uk.";
     public final static String REAL_QUERY_NAME = "dnsjnio-1-0-1-test1.validation-test-servers.nominet.org.uk.";
 
     public RemoteServerTest(String arg0) {

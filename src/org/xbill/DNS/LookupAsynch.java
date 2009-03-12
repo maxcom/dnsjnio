@@ -752,8 +752,9 @@ public final class LookupAsynch {
 
         return answers;
     }
-    
-    public void runAsynch(Runnable completionTask) {
+
+    // Returns true if the result comes immediately, from this thread, false otherwise
+    public boolean runAsynch(Runnable completionTask) {
         this.completionTask = completionTask;
         initLookup();
 
@@ -761,8 +762,10 @@ public final class LookupAsynch {
         LookupContinuation lc = resolve(name, first);
         if (lc == null) {
             completeLookup();
+            return true;
         } else {
             submitQuery(lc);
+            return false;
         }
     }
 
