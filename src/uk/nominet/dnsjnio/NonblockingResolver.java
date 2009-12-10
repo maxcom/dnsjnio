@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-package org.xbill.DNS;
+package uk.nominet.dnsjnio;
 
+import org.xbill.DNS.*;
+import uk.nominet.dnsjnio.INonblockingResolver;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -553,10 +555,10 @@ public class NonblockingResolver implements INonblockingResolver {
 		if (tsig == null)
 			return;
 		int error = tsig.verify(response, b, query.getTSIG());
-		if (error == Rcode.NOERROR)
-			response.tsigState = Message.TSIG_VERIFIED;
-		else
-			response.tsigState = Message.TSIG_FAILED;
+//		if (error == Rcode.NOERROR)
+//			response.tsigState = Message.TSIG_VERIFIED;
+//		else
+//			response.tsigState = Message.TSIG_FAILED;
 		if (Options.check("verbose"))
 			System.err.println("TSIG verify: " + Rcode.string(error));
 	}

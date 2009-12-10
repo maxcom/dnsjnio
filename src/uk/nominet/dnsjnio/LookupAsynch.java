@@ -17,8 +17,10 @@ limitations under the License.
 
 
 // Copyright (c) 2002-2004 Brian Wellington (bwelling@xbill.org)
-package org.xbill.DNS;
+package uk.nominet.dnsjnio;
 
+import org.xbill.DNS.*;
+import uk.nominet.dnsjnio.ExtendedNonblockingResolver;
 import uk.nominet.dnsjnio.Response;
 import uk.nominet.dnsjnio.ResponseQueue;
 
@@ -271,10 +273,10 @@ public final class LookupAsynch {
      */
     public static synchronized Cache getDefaultCache(int dclass) {
         DClass.check(dclass);
-        Cache c = (Cache) defaultCaches.get(Mnemonic.toInteger(dclass));
+        Cache c = (Cache) defaultCaches.get(new Integer(dclass));
         if (c == null) {
             c = new Cache(dclass);
-            defaultCaches.put(Mnemonic.toInteger(dclass), c);
+            defaultCaches.put(new Integer(dclass), c);
         }
         return c;
     }
@@ -290,7 +292,7 @@ public final class LookupAsynch {
      */
     public static synchronized void setDefaultCache(Cache cache, int dclass) {
         DClass.check(dclass);
-        defaultCaches.put(Mnemonic.toInteger(dclass), cache);
+        defaultCaches.put(new Integer(dclass), cache);
     }
 
     /**

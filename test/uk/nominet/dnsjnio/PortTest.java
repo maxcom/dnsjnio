@@ -19,7 +19,7 @@ package uk.nominet.dnsjnio;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Name;
-import org.xbill.DNS.NonblockingResolver;
+import uk.nominet.dnsjnio.NonblockingResolver;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;

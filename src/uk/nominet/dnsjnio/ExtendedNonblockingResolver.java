@@ -1,5 +1,6 @@
-package org.xbill.DNS;
+package uk.nominet.dnsjnio;
 
+import org.xbill.DNS.*;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.UnknownHostException;

@@ -15,8 +15,7 @@ limitations under the License.
 */
 
 import org.xbill.DNS.*;
-import uk.nominet.dnsjnio.Response;
-import uk.nominet.dnsjnio.ResponseQueue;
+import uk.nominet.dnsjnio.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

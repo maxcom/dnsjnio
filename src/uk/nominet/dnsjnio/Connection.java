@@ -23,7 +23,7 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 
-import org.xbill.DNS.NonblockingResolver;
+import uk.nominet.dnsjnio.NonblockingResolver;
 
 /**
  * The superclass for the TCP and UDP connections.

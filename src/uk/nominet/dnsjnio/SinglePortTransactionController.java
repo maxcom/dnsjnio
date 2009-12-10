@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.xbill.DNS.Flags;
 import org.xbill.DNS.Message;
-import org.xbill.DNS.NonblockingResolver;
+import uk.nominet.dnsjnio.NonblockingResolver;
 import org.xbill.DNS.ResolverListener;
 
 /**

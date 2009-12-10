@@ -49,7 +49,7 @@ public class UDPConnection extends Connection {
             	// already in use. Pick another random port and try again.
             	// Note that the socket channel is now invalid, we need to
             	// close it and open a fresh one.
-            	localAddress = org.xbill.DNS.NonblockingResolver.getNewInetSocketAddressWithRandomPort(localAddress.getAddress());
+            	localAddress = uk.nominet.dnsjnio.NonblockingResolver.getNewInetSocketAddressWithRandomPort(localAddress.getAddress());
             	sch.close();
             	sch = DatagramChannel.open();
             	sch.configureBlocking(false);
