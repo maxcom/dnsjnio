@@ -20,9 +20,6 @@ limitations under the License.
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.*;
-import uk.nominet.dnsjnio.ExtendedNonblockingResolver;
-import uk.nominet.dnsjnio.Response;
-import uk.nominet.dnsjnio.ResponseQueue;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -417,7 +414,7 @@ public final class LookupAsynch {
      *                The type of the desired records
      * @throws IllegalArgumentException
      *                 The type is a meta type other than ANY.
-     * @see #Lookup(Name,int,int)
+     * @see org.xbill.DNS.Lookup#Lookup(Name,int,int)
      */
     public LookupAsynch(Name name, int type) {
         this(name, type, DClass.IN);
@@ -429,7 +426,7 @@ public final class LookupAsynch {
      * 
      * @param name
      *                The name of the desired records
-     * @see #Lookup(Name,int,int)
+     * @see org.xbill.DNS.Lookup#Lookup(Name,int,int)
      */
     public LookupAsynch(Name name) {
         this(name, Type.A, DClass.IN);
@@ -449,7 +446,7 @@ public final class LookupAsynch {
      *                 The name is not a valid DNS name
      * @throws IllegalArgumentException
      *                 The type is a meta type other than ANY.
-     * @see #Lookup(Name,int,int)
+     * @see org.xbill.DNS.Lookup#Lookup(Name,int,int)
      */
     public LookupAsynch(String name, int type, int dclass)
             throws TextParseException {
@@ -468,7 +465,7 @@ public final class LookupAsynch {
      *                 The name is not a valid DNS name
      * @throws IllegalArgumentException
      *                 The type is a meta type other than ANY.
-     * @see #Lookup(Name,int,int)
+     * @see org.xbill.DNS.Lookup#Lookup(Name,int,int)
      */
     public LookupAsynch(String name, int type) throws TextParseException {
         this(Name.fromString(name), type, DClass.IN);
@@ -482,7 +479,7 @@ public final class LookupAsynch {
      *                The name of the desired records
      * @throws TextParseException
      *                 The name is not a valid DNS name
-     * @see #Lookup(Name,int,int)
+     * @see org.xbill.DNS.Lookup#Lookup(Name,int,int)
      */
     public LookupAsynch(String name) throws TextParseException {
         this(Name.fromString(name), Type.A, DClass.IN);

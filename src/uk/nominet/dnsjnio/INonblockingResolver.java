@@ -17,7 +17,6 @@ limitations under the License.
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.*;
-import uk.nominet.dnsjnio.ResponseQueue;
 
 /**
  * Extended Resolver interface for NonblockingResolver.
@@ -55,7 +54,7 @@ public interface INonblockingResolver extends Resolver {
     /**
      * Set single port mode on or off for TCP
      * THIS ONLY WORKS FOR TCP-BASED QUERIES - UDP QUERIES WILL ALWAYS USE A RANDOM PORT
-     * @param useSamePort should same port be used for all the queries?
+     * @param useSameTcpPort should same port be used for all the queries?
      */
     public void setSingleTcpPort(boolean useSameTcpPort);
 }

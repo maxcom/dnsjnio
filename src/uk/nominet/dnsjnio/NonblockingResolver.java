@@ -17,19 +17,12 @@ limitations under the License.
 package uk.nominet.dnsjnio;
 
 import org.xbill.DNS.*;
-import uk.nominet.dnsjnio.INonblockingResolver;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.List;
-
-import uk.nominet.dnsjnio.QueryData;
-import uk.nominet.dnsjnio.Response;
-import uk.nominet.dnsjnio.ResponseQueue;
-import uk.nominet.dnsjnio.SinglePortTransactionController;
-import uk.nominet.dnsjnio.Transaction;
 
 /**
  * A nonblocking implementation of Resolver. Multiple concurrent sendAsync
@@ -130,7 +123,7 @@ public class NonblockingResolver implements INonblockingResolver {
 	/**
 	 * Sets the address of the server to communicate with.
 	 * 
-	 * @param remoteAddress
+	 * @param addr
 	 *            The address of the DNS server
 	 */
 	public void setRemoteAddress(InetSocketAddress addr) {
@@ -142,7 +135,7 @@ public class NonblockingResolver implements INonblockingResolver {
 	 * Sets the address of the server to communicate with (on the default DNS
 	 * port)
 	 * 
-	 * @param remoteAddress
+	 * @param addr
 	 *            The address of the DNS server
 	 */
 	public void setRemoteAddress(InetAddress addr) {

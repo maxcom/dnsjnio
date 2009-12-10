@@ -9,9 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import uk.nominet.dnsjnio.Response;
-import uk.nominet.dnsjnio.ResponseQueue;
-
 /**
 Copyright 2007 Nominet UK
 
@@ -55,6 +52,7 @@ public class ExtendedNonblockingResolver implements Resolver {
 	}
 
 	static Integer threadCount = new Integer(0);
+    static final Object threadCountLock = new Object();
 
 	private class ResolutionThread extends Thread {
 		NonblockingResolver[] resolvers;
@@ -63,7 +61,7 @@ public class ExtendedNonblockingResolver implements Resolver {
 		
 		public ResolutionThread(ExtendedNonblockingResolver eres) {
 			int count = 0;
-			synchronized (threadCount) {
+			synchronized (threadCountLock) {
 				count = threadCount.intValue();
 				threadCount = new Integer(threadCount.intValue() + 1);
 			}

@@ -21,7 +21,6 @@ import java.net.InetSocketAddress;
 
 import org.xbill.DNS.Flags;
 import org.xbill.DNS.Message;
-import uk.nominet.dnsjnio.NonblockingResolver;
 import org.xbill.DNS.ResolverListener;
 import org.xbill.DNS.TSIG;
 
@@ -51,11 +50,11 @@ public class Transaction extends AbstractTransaction {
     private ResolverListener listener = null;
     protected int udpSize;
     private boolean answered = false;
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     /**
      * Transaction constructor
-     * @param remoteAddress The resolver to query
+     * @param remoteAddr The resolver to query
      * @param tsig The TSIG for the query
      * @param tcp use TCP if true, UDP otherwise
      * @param ignoreTruncation true if truncated responses are ok
