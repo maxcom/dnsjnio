@@ -43,8 +43,6 @@ public class ResponseQueue
 		while ( isEmpty() ) {
 			try	{ waitingThreads++; wait();}
 			catch (InterruptedException e)	{
-				Thread.currentThread().interrupt();
-				//Thread.interrupted();
 				}
 			waitingThreads--;
 		}
