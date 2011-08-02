@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
 Copyright 2007 Nominet UK
@@ -89,7 +90,7 @@ public class ExtendedNonblockingResolver implements Resolver {
 			}
 		}
 
-		private Map clientRequests = new HashMap();
+		private Map clientRequests = new ConcurrentHashMap();
 
 		ResponseQueue queryQueue = new ResponseQueue();
 

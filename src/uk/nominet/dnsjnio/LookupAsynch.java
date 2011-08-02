@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The Lookup object issues queries to caching DNS servers. The input consists
@@ -59,7 +61,7 @@ public final class LookupAsynch {
                 Response response;
                 synchronized(responseQueue) {
                     response = responseQueue.getItem();
-                    pendingLookup = (LookupAsynch) pendingLookups.remove(response.getId());
+                    pendingLookup = pendingLookups.remove(response.getId());
                 }
                 if (pendingLookup != null) {
                     LookupContinuation lc = pendingLookup.processResponse(response);
@@ -73,7 +75,7 @@ public final class LookupAsynch {
                     }
 				} else {
 					// Response must have already come in from another query - ignore it
-//					System.err.println("DNSJNIO LookupAsynch " + 
+//					System.err.println("DNSJNIO LookupAsynch " +
 //							"ERROR - ProcessingTask ignoring good response (id = "  +
 //							response.getId() + ") due to no known request");
 				}
@@ -216,13 +218,13 @@ public final class LookupAsynch {
 
     private Runnable completionTask;
 
-    private static int id = 1;
+    private static AtomicInteger id = new AtomicInteger(1);
 
     private static Thread workerThread;
 
     private static ResponseQueue responseQueue;
 
-    private static Map pendingLookups;
+    private static Map<Integer, LookupAsynch> pendingLookups;
 
 
     public static synchronized void refreshDefault() {
@@ -390,7 +392,7 @@ public final class LookupAsynch {
                 LookupAsynch.responseQueue = new ResponseQueue();
             }
             if (LookupAsynch.pendingLookups == null) {
-                LookupAsynch.pendingLookups = new HashMap();
+                LookupAsynch.pendingLookups = new ConcurrentHashMap<Integer, LookupAsynch>();
             }
             if (LookupAsynch.workerThread == null) {
                 LookupAsynch.workerThread = new Thread(new ProcessingTask(), "LookupAsynchResolver");
@@ -770,7 +772,7 @@ public final class LookupAsynch {
 
     private void submitQuery(LookupContinuation lc) {
         currentLookupContinuation = lc;
-        Integer nextId = new Integer(nextId());
+        Integer nextId = Integer.valueOf(nextId());
         pendingLookups.put(nextId, this);
         Message toSend = (Message)(lc.getQuery().clone());
         int rnd = random.nextInt(65535);
@@ -780,8 +782,8 @@ public final class LookupAsynch {
 
     
     // TODO: sooner or later we have to avoid overflow and restart.
-    private synchronized int nextId() {
-        return id++;
+    private int nextId() {
+        return id.getAndIncrement();
     }
 
     private void initLookup() {
